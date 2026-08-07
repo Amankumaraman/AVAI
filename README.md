@@ -1,20 +1,22 @@
-# AVAI - Stealth Interview Assistant
+# AVAI - Multimodal AI Student Study Companion
 
-AVAI is a premium, ultra-stealth multimodal AI desktop assistant designed to assist with technical interviews in real-time. Built using **FastAPI**, **Vite/React**, and **PyWebView**, it runs on Windows as a high-performance native desktop window featuring custom transparency, click-through overlay states, global OS hotkeys, and screen-sharing invisibility.
+AVAI is a high-performance student study assistant and focus companion. Designed for classrooms, study halls, and libraries, it helps students capture slide contents, solve complex homework equations, summarize programming examples, and retrieve study guidance in real-time.
+
+Built using **FastAPI**, **Vite/React**, and **PyWebView**, it runs on Windows as a native desktop utility featuring customized transparency, presenter-friendly overlay exclusions, and system hotkeys.
 
 ---
 
 ## ✨ Features
 
-- **📺 Invisibility on Screen Shares**: Automatically applies `WDA_EXCLUDEFROMCAPTURE` to the desktop container, rendering it completely invisible to Google Meet, Zoom, MS Teams, and Discord screen shares.
-- **🔇 Muted TTS Audio**: Speech responses are hard-muted across all hooks to prevent interviewers from hearing any audio coming from the app.
+- **📺 Presenter-Friendly Overlay Exclusions**: Automatically excludes the helper interface from screen-sharing captures (`WDA_EXCLUDEFROMCAPTURE`) so it won't distract others during live presentation slides on Zoom or Google Meet.
+- **🔇 Silent Library Mode**: Speech synthesis is hard-muted across all modules, ensuring quiet and distraction-free operation in libraries, classrooms, and study spaces.
 - **🎛️ Keyboard & Window Control**:
-  - `Ctrl + ArrowKeys` - Slide the actual native Windows OS window across your monitors.
-  - `Ctrl + \` or `Alt + H` - Minimize the entire desktop window instantly (press again system-wide to restore it).
-  - `Ctrl + [` / `Ctrl + ]` - Instantly navigate prior answer pages.
-- **📸 On-Demand Screen Analysis**: No automatic captures. Trigger snapshot captures only when needed using the **⚡ Analyze Screen** button or `Ctrl + Enter`.
-- **🎚️ Dynamic Opacity**: Control the background transparency of both the inner React UI and the outer physical window frame using a slider in the settings panel (saved permanently to `localStorage`).
-- **💡 Answer Modes & Presets**: Toggle between **Verbal Pointers** (3-4 spoken bullet points) and **Deep Code** modes, and select custom role presets (Frontend, Backend, Fullstack, DevOps).
+  - `Ctrl + ArrowKeys` - Smoothly reposition the floating utility window across your desktop/monitors.
+  - `Ctrl + \` or `Alt + H` - Minimize the companion app instantly (press again system-wide to restore it).
+  - `Ctrl + [` / `Ctrl + ]` - Navigate backward and forward through prior notes pages.
+- **📸 Slide & Text Capture**: Capture slide segments or equations on-demand only (via **⚡ Analyze Screen** or `Ctrl + Enter`) to query explanations.
+- **🎚️ Customized Transparency**: Adjust the window background opacity of the UI and host frame using a settings slider (persisted to local settings) to blend with your lecture notes.
+- **💡 Study Modes & Presets**: Toggle between **Verbal Pointers** (crisp, easy-to-read concepts) and **Deep Code** (comprehensive logic breakdowns) modes.
 
 ---
 
@@ -27,7 +29,7 @@ AVAI is a premium, ultra-stealth multimodal AI desktop assistant designed to ass
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Setup & Run
 
 ### Prerequisites
 - Windows OS (for Win32 window APIs and global hotkeys)
@@ -35,7 +37,7 @@ AVAI is a premium, ultra-stealth multimodal AI desktop assistant designed to ass
 - Node.js 18+
 
 ### Setup & Run
-1. Double-click `Install_Desktop_Shortcut.bat` to create an **AVAI Assistant** shortcut on your Desktop.
+1. Run `Install_Desktop_Shortcut.bat` to create an **AVAI Assistant** shortcut on your Desktop.
 2. Double-click `Start_AVAI.bat` (or use the shortcut) to run the detached silent FastAPI backend and native desktop client.
 
 ---
