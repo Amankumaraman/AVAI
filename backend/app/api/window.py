@@ -239,3 +239,26 @@ async def capture_screenshot():
         except Exception:
             pass
         return {"status": "error", "message": str(e)}
+
+
+@router.post("/close")
+async def close_native_window():
+    """Exit and terminate the native OS application process."""
+    try:
+        import os
+        import time
+        import ctypes
+        import threading
+
+        user32 = ctypes.windll.user32
+        hwnd = find_avai_window_hwnd()
+        if hwnd:
+            # Send WM_CLOSE message (0x0010)
+            user32.PostMessageW(int(hwnd), 0x0010, 0, 0)
+        
+        # Force process termination after 0.2s
+        threading.Thread(target=lambda: (time.sleep(0.2), os._exit(0)), daemon=True).start()
+        return {"status": "ok", "action": "closing"}
+    except Exception:
+        import os
+        os._exit(0)

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { X, Settings as SettingsIcon } from 'lucide-react';
-import type { Settings, KeyboardShortcuts } from '../../types';
+import React, { useState, useEffect, useMemo } from 'react';
+import { X, Settings as SettingsIcon, Calendar, Trash2, Clock } from 'lucide-react';
+import type { Settings, KeyboardShortcuts, Message } from '../../types';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -10,6 +10,8 @@ interface SettingsModalProps {
   onRestoreAllSettings?: () => void;
   onDeleteAllData?: () => void;
   voices?: SpeechSynthesisVoice[];
+  messages?: Message[];
+  onClearHistory?: () => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -19,6 +21,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onSave,
   onRestoreAllSettings,
   onDeleteAllData,
+  messages,
+  onClearHistory,
 }) => {
   const [apiKey, setApiKey] = useState(settings.openRouterApiKey);
   const [backendUrl, setBackendUrl] = useState(settings.backendUrl);
@@ -62,6 +66,26 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     setResponseFontSize(settings.responseFontSize ?? 18);
     if (settings.shortcuts) setShortcuts(settings.shortcuts);
   }, [settings, isOpen]);
+
+  // Group chat history date-wise
+  const groupedHistory = useMemo(() => {
+    const historyList = messages || [];
+    const groups: Record<string, Message[]> = {};
+
+    historyList.forEach((msg) => {
+      const dateObj = new Date(msg.timestamp || Date.now());
+      const dateKey = dateObj.toLocaleDateString('en-US', {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
+      if (!groups[dateKey]) groups[dateKey] = [];
+      groups[dateKey].push(msg);
+    });
+
+    return groups;
+  }, [messages]);
 
   if (!isOpen) return null;
 
@@ -444,7 +468,98 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           </div>
 
-          {/* Section 6: Privacy and Data */}
+          {/* Section 6: Date-Wise Saved Chat History */}
+          <div
+            style={{
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '12px',
+              padding: '18px 20px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Calendar size={18} style={{ color: 'var(--accent-cyan)' }} />
+                <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#fff' }}>
+                  Date-Wise Chat History & Saved Responses
+                </h3>
+              </div>
+              {onClearHistory && (messages?.length || 0) > 0 && (
+                <button
+                  type="button"
+                  onClick={onClearHistory}
+                  style={{
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                    background: 'rgba(239, 68, 68, 0.15)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    color: '#f87171',
+                    fontSize: '0.75rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <Trash2 size={12} /> Clear All History
+                </button>
+              )}
+            </div>
+
+            {Object.keys(groupedHistory).length === 0 ? (
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                No chat history saved yet. Conversations and screen analysis responses will be saved here automatically date-wise.
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', maxHeight: '280px', overflowY: 'auto', paddingRight: '4px' }}>
+                {Object.entries(groupedHistory).map(([dateStr, msgs]) => (
+                  <div
+                    key={dateStr}
+                    style={{
+                      background: 'rgba(15, 23, 42, 0.6)',
+                      border: '1px solid rgba(255, 255, 255, 0.05)',
+                      borderRadius: '8px',
+                      padding: '12px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)', marginBottom: '8px' }}>
+                      <Calendar size={13} />
+                      <span>{dateStr}</span>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 400 }}>({msgs.length} messages)</span>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {msgs.map((m) => {
+                        const timeStr = new Date(m.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        return (
+                          <div
+                            key={m.id}
+                            style={{
+                              fontSize: '0.78rem',
+                              padding: '6px 10px',
+                              borderRadius: '6px',
+                              background: m.role === 'user' ? 'rgba(99, 102, 241, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+                              borderLeft: m.role === 'user' ? '3px solid var(--primary)' : '3px solid var(--accent-cyan)',
+                            }}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', fontSize: '0.7rem', marginBottom: '2px' }}>
+                              <span>{m.role === 'user' ? '👤 User Prompt' : '🤖 AI Response'}</span>
+                              <span><Clock size={10} style={{ verticalAlign: 'middle', marginRight: '2px' }} />{timeStr}</span>
+                            </div>
+                            <div style={{ color: '#e5e7eb', whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxHeight: '100px', overflowY: 'auto' }}>
+                              {m.content.slice(0, 180)}{m.content.length > 180 ? '...' : ''}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Section 7: Privacy and Data */}
           <div
             style={{
               border: '1px solid rgba(239, 68, 68, 0.4)',

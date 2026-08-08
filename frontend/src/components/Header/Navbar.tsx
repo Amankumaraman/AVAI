@@ -39,7 +39,47 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   return (
     <header className="navbar pywebview-drag-region" style={{ padding: '6px 12px', gap: '6px', flexWrap: 'wrap' }}>
-      <div className="nav-brand" style={{ gap: '6px' }}>
+      <div className="nav-brand" style={{ gap: '8px', alignItems: 'center' }}>
+        {/* Apple macOS Traffic Light Dots */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginRight: '4px' }}>
+          <button
+            type="button"
+            onClick={() => {
+              fetch('http://127.0.0.1:8000/api/window/close', { method: 'POST' }).catch(() => {
+                window.close();
+              });
+            }}
+            style={{
+              width: '12px',
+              height: '12px',
+              borderRadius: '50%',
+              backgroundColor: '#ff5f56',
+              border: '1px solid rgba(255, 95, 86, 0.4)',
+              cursor: 'pointer',
+              boxShadow: '0 0 5px rgba(255, 95, 86, 0.5)',
+              padding: 0,
+            }}
+            title="Exit Application (Close Process)"
+          />
+          <button
+            type="button"
+            onClick={() => {
+              fetch('http://127.0.0.1:8000/api/window/hide', { method: 'POST' }).catch(() => {});
+            }}
+            style={{
+              width: '12px',
+              height: '12px',
+              borderRadius: '50%',
+              backgroundColor: '#ffbd2e',
+              border: '1px solid rgba(255, 189, 46, 0.4)',
+              cursor: 'pointer',
+              boxShadow: '0 0 5px rgba(255, 189, 46, 0.5)',
+              padding: 0,
+            }}
+            title="Minimize Floating Window (Ctrl+\)"
+          />
+        </div>
+
         <div
           className="brand-icon"
           style={{

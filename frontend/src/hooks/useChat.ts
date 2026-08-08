@@ -45,11 +45,29 @@ export const DEFAULT_SETTINGS: Settings = {
 };
 
 export function useChat(onSpeakResponse?: (text: string) => void) {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    try {
+      const saved = localStorage.getItem('avai_chat_history_v1');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error('Failed to load chat history:', e);
+    }
+    return [];
+  });
+
   const [isLoading, setIsLoading] = useState(false);
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>(DEFAULT_SETTINGS.defaultModel);
   const [attachedImage, setAttachedImage] = useState<string | null>(null);
+
+  // Persist chat messages to localStorage whenever messages change
+  useEffect(() => {
+    try {
+      localStorage.setItem('avai_chat_history_v1', JSON.stringify(messages));
+    } catch (e) {
+      console.error('Failed to save chat history:', e);
+    }
+  }, [messages]);
 
   // Settings persisted in localStorage
   const [settings, setSettings] = useState<Settings>(() => {

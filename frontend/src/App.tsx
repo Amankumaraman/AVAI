@@ -258,6 +258,8 @@ export function App() {
         onRestoreAllSettings={restoreAllSettings}
         onDeleteAllData={deleteAllData}
         voices={voices}
+        messages={messages}
+        onClearHistory={clearHistory}
       />
 
       <CameraModal
