@@ -221,10 +221,10 @@ async def capture_screenshot():
             user32.ShowWindow(hwnd_int, 5)  # SW_SHOW
             user32.SetForegroundWindow(hwnd_int)
 
-        # Step 4: Downscale & compress to JPEG in memory (lightweight ~150KB payload)
-        img.thumbnail((1600, 1600))
+        # Step 4: Downscale & compress to JPEG in memory (lightweight ~80KB payload)
+        img.thumbnail((1280, 1280))
         buffer = io.BytesIO()
-        img.save(buffer, format="JPEG", quality=75, optimize=True)
+        img.save(buffer, format="JPEG", quality=65, optimize=True)
         b64_data = base64.b64encode(buffer.getvalue()).decode("utf-8")
         data_url = f"data:image/jpeg;base64,{b64_data}"
 

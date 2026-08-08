@@ -33,7 +33,7 @@ class OpenRouterService:
         system_prompt: Optional[str] = None,
         user_api_key: Optional[str] = None,
     ) -> Dict[str, Any]:
-        target_model = model or DEFAULT_MODEL
+        target_model = model or "google/gemma-4-26b-a4b-it:free"
         headers = self._get_headers(user_api_key)
 
         sys_prompt = system_prompt or DEFAULT_SYSTEM_PROMPT
@@ -48,7 +48,7 @@ class OpenRouterService:
             "stream": False,
         }
 
-        async with httpx.AsyncClient(timeout=60.0) as client:
+        async with httpx.AsyncClient(timeout=12.0) as client:
             try:
                 response = await client.post(
                     f"{self.base_url}/chat/completions",
@@ -56,6 +56,11 @@ class OpenRouterService:
                     json=payload,
                 )
                 
+                if response.status_code != 200:
+                    # Retry immediately with fast model
+                    payload["model"] = "google/gemma-4-26b-a4b-it:free"
+                    response = await client.post(f"{self.base_url}/chat/completions", headers=headers, json=payload)
+
                 if response.status_code != 200:
                     error_detail = response.text
                     try:
@@ -75,7 +80,7 @@ class OpenRouterService:
 
                 # Fallback check: If the returned model output is just "User Safety: safe" or a safety filter classification, retry with a fallback model
                 if "User Safety:" in content_text or content_text.strip() == "safe" or (len(content_text.strip()) < 30 and "User Safety" in content_text):
-                    fallback_models = ["google/gemma-4-31b-it:free", "google/gemma-4-26b-a4b-it:free", "cohere/north-mini-code:free", "openai/gpt-oss-20b:free"]
+                    fallback_models = ["google/gemma-4-26b-a4b-it:free", "nvidia/nemotron-nano-12b-v2-vl:free", "cohere/north-mini-code:free"]
                     for fb_model in fallback_models:
                         if fb_model != target_model:
                             payload["model"] = fb_model
