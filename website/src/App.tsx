@@ -43,9 +43,8 @@ export default function App() {
     setPaymentError(null);
 
     try {
-      // Step 1: Backend - Create Order (POST /api/create-order)
-      const backendUrl = 'http://localhost:8000';
-      const orderRes = await fetch(`${backendUrl}/api/create-order`, {
+      // Step 1: Vercel Serverless API Function - Create Order (/api/create-order)
+      let orderRes = await fetch('/api/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -53,11 +52,24 @@ export default function App() {
           currency: 'INR',
           receipt: `rcpt_avai_${Date.now()}`,
         }),
-      });
+      }).catch(() => null);
+
+      if (!orderRes || !orderRes.ok) {
+        // Fallback to local Python backend port 8000
+        orderRes = await fetch('http://localhost:8000/api/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: 50000,
+            currency: 'INR',
+            receipt: `rcpt_avai_${Date.now()}`,
+          }),
+        });
+      }
 
       if (!orderRes.ok) {
         const errData = await orderRes.json().catch(() => ({ detail: orderRes.statusText }));
-        throw new Error(errData.detail || 'Failed to create payment order.');
+        throw new Error(errData.detail || errData.error || 'Failed to create payment order.');
       }
 
       const orderData = await orderRes.json();
@@ -78,8 +90,8 @@ export default function App() {
         order_id: orderData.order_id,
         handler: async function (response: any) {
           try {
-            // Step 3: Backend - Verify Payment Signature (POST /api/verify-payment)
-            const verifyRes = await fetch(`${backendUrl}/api/verify-payment`, {
+            // Step 3: Vercel Serverless API Function - Verify Payment Signature (/api/verify-payment)
+            let verifyRes = await fetch('/api/verify-payment', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -87,7 +99,19 @@ export default function App() {
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
               }),
-            });
+            }).catch(() => null);
+
+            if (!verifyRes || !verifyRes.ok) {
+              verifyRes = await fetch('http://localhost:8000/api/verify-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                }),
+              });
+            }
 
             const verifyData = await verifyRes.json();
             setIsProcessingPayment(false);
@@ -98,7 +122,7 @@ export default function App() {
                 paymentId: response.razorpay_payment_id,
               });
             } else {
-              setPaymentError(verifyData.detail || 'Payment verification failed: Signature mismatch.');
+              setPaymentError(verifyData.detail || verifyData.error || 'Payment verification failed: Signature mismatch.');
             }
           } catch (err: any) {
             setIsProcessingPayment(false);
@@ -128,7 +152,7 @@ export default function App() {
       rzp.open();
     } catch (err: any) {
       setIsProcessingPayment(false);
-      setPaymentError(err.message || 'Could not connect to backend server on port 8000.');
+      setPaymentError(err.message || 'Could not connect to payment service.');
     }
   };
 
