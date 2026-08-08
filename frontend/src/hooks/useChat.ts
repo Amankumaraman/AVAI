@@ -87,12 +87,24 @@ export function useChat(onSpeakResponse?: (text: string) => void) {
     return DEFAULT_SETTINGS;
   });
 
-  // Save settings to localStorage
+  // Save settings to localStorage and sync backend .env
   const updateSettings = useCallback((newSettings: Partial<Settings>) => {
     setSettings((prev) => {
       const updated = { ...prev, ...newSettings };
       try {
         localStorage.setItem('assistant_settings', JSON.stringify(updated));
+
+        // Sync API key updates to backend .env file dynamically
+        if (newSettings.openRouterApiKey !== undefined || newSettings.groqApiKey !== undefined) {
+          fetch(`${updated.backendUrl || DEFAULT_BACKEND_URL}/api/settings`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              openrouter_api_key: updated.openRouterApiKey,
+              groq_api_key: updated.groqApiKey,
+            }),
+          }).catch(() => {});
+        }
       } catch (e) {
         console.error('Failed to save settings:', e);
       }

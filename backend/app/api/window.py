@@ -262,3 +262,26 @@ async def close_native_window():
     except Exception:
         import os
         os._exit(0)
+
+
+class SettingsUpdateRequest(BaseModel):
+    openrouter_api_key: Optional[str] = None
+    groq_api_key: Optional[str] = None
+
+
+@router.post("/settings")
+async def update_backend_settings(req: SettingsUpdateRequest):
+    """Dynamically update OpenRouter and Groq API keys in backend .env file on disk."""
+    try:
+        from pathlib import Path
+        from dotenv import set_key
+        env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+        
+        if req.openrouter_api_key is not None:
+            set_key(env_path, "OPENROUTER_API_KEY", req.openrouter_api_key.strip())
+        if req.groq_api_key is not None:
+            set_key(env_path, "GROQ_API_KEY", req.groq_api_key.strip())
+            
+        return {"status": "ok", "message": "API keys updated and persisted to .env"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
