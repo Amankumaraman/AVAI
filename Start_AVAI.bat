@@ -1,2 +1,3 @@
 @echo off
-start /B wscript.exe "%~dp0Start_AVAI.vbs"
+cd /d "%~dp0backend"
+start "" pythonw app_launcher.py
