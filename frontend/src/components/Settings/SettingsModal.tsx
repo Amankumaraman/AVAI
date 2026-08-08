@@ -40,6 +40,34 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [answerMode, setAnswerMode] = useState<AnswerMode>(settings.answerMode || 'verbal');
   const [techRole, setTechRole] = useState<TechRole>(settings.techRole || 'backend');
 
+  const [updateInfo, setUpdateInfo] = useState<{
+    update_available: boolean;
+    current_version: string;
+    latest_version: string;
+    download_url?: string;
+    release_notes?: string;
+  } | null>(null);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
+
+  const checkSoftwareUpdate = async () => {
+    setCheckingUpdate(true);
+    try {
+      const res = await fetch(`${settings.backendUrl}/api/window/check-update`);
+      if (res.ok) {
+        const data = await res.json();
+        setUpdateInfo(data);
+      }
+    } catch {
+      setUpdateInfo({
+        update_available: false,
+        current_version: '1.0.0',
+        latest_version: '1.0.0',
+      });
+    } finally {
+      setCheckingUpdate(false);
+    }
+  };
+
   const [audioMode, setAudioMode] = useState(settings.audioMode || 'speaker_only');
   const [imageQuality, setImageQuality] = useState(settings.imageQuality || 'medium');
   const [speechLanguage, setSpeechLanguage] = useState(settings.speechLanguage || 'en-US');
@@ -77,6 +105,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     setAnswerMode(settings.answerMode || 'verbal');
     setTechRole(settings.techRole || 'backend');
     if (settings.shortcuts) setShortcuts(settings.shortcuts);
+    if (isOpen) checkSoftwareUpdate();
   }, [settings, isOpen]);
 
   // Group chat history date-wise
@@ -177,6 +206,83 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* Section: Software Updates & Release Check */}
+          <div
+            style={{
+              background: updateInfo?.update_available ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+              border: updateInfo?.update_available ? '1px solid var(--accent-cyan)' : '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '12px',
+              padding: '16px 20px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#fff' }}>
+                    AVAI Desktop Assistant
+                  </span>
+                  <span style={{ fontSize: '0.75rem', background: 'rgba(99, 102, 241, 0.2)', color: 'var(--primary)', padding: '2px 8px', borderRadius: '4px', fontWeight: 600 }}>
+                    v{updateInfo?.current_version || '1.0.0'}
+                  </span>
+                </div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                  {checkingUpdate
+                    ? 'Checking remote servers for updates...'
+                    : updateInfo?.update_available
+                    ? `🎉 New version v${updateInfo.latest_version} is available!`
+                    : 'Your software is up to date (Latest v1.0.0)'}
+                </div>
+              </div>
+
+              <div>
+                {updateInfo?.update_available ? (
+                  <a
+                    href={updateInfo.download_url || "https://logqkleznefvwxngpbcs.supabase.co/storage/v1/object/public/app-downloads/AVAI_Setup_v1.0.exe"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '8px',
+                      background: 'linear-gradient(135deg, #10b981, #06b6d4)',
+                      color: '#fff',
+                      fontSize: '0.82rem',
+                      fontWeight: 700,
+                      textDecoration: 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)',
+                    }}
+                  >
+                    🚀 Download v{updateInfo.latest_version} Update ↗
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={checkSoftwareUpdate}
+                    disabled={checkingUpdate}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: '6px',
+                      background: 'rgba(255, 255, 255, 0.08)',
+                      color: '#fff',
+                      fontSize: '0.8rem',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {checkingUpdate ? 'Checking...' : 'Check for Updates'}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {updateInfo?.update_available && updateInfo.release_notes && (
+              <div style={{ marginTop: '12px', background: '#090d16', padding: '10px 14px', borderRadius: '8px', fontSize: '0.8rem', color: '#cbd5e1', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                <strong>Release Notes:</strong> {updateInfo.release_notes}
+              </div>
+            )}
+          </div>
           {/* Section 0: AI Intelligence & Mode Controls */}
           <div
             style={{

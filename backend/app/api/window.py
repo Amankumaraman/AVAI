@@ -285,3 +285,35 @@ async def update_backend_settings(req: SettingsUpdateRequest):
         return {"status": "ok", "message": "API keys updated and persisted to .env"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+
+CURRENT_VERSION = "1.0.0"
+REMOTE_VERSION_URL = "https://raw.githubusercontent.com/Amankumaraman/AVAI/main/version.json"
+
+@router.get("/check-update")
+async def check_for_software_update():
+    """Checks remote version.json manifest to detect new app releases."""
+    try:
+        import httpx
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.get(REMOTE_VERSION_URL)
+            if resp.status_code == 200:
+                data = resp.json()
+                latest_ver = data.get("latest_version", CURRENT_VERSION)
+                update_needed = latest_ver != CURRENT_VERSION
+                return {
+                    "status": "ok",
+                    "update_available": update_needed,
+                    "current_version": CURRENT_VERSION,
+                    "latest_version": latest_ver,
+                    "download_url": data.get("download_url", "https://logqkleznefvwxngpbcs.supabase.co/storage/v1/object/public/app-downloads/AVAI_Setup_v1.0.exe"),
+                    "release_notes": data.get("release_notes", "A new version of AVAI Assistant is available!")
+                }
+    except Exception:
+        pass
+    return {
+        "status": "ok",
+        "update_available": False,
+        "current_version": CURRENT_VERSION,
+        "latest_version": CURRENT_VERSION,
+    }

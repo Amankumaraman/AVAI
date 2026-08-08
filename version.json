@@ -1,0 +1,6 @@
+{
+  "latest_version": "1.0.0",
+  "download_url": "https://logqkleznefvwxngpbcs.supabase.co/storage/v1/object/public/app-downloads/AVAI_Setup_v1.0.exe",
+  "release_notes": "Official Release v1.0.0: Multimodal AI Stealth Desktop Assistant for Windows with sub-100ms screen analysis and Groq LPU acceleration.",
+  "min_required_version": "1.0.0"
+}
