@@ -21,7 +21,6 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   onToggleListening,
   attachedImage,
   onSetAttachedImage,
-  onOpenCamera,
   liveTranscript,
 }) => {
   const [text, setText] = useState('');
@@ -49,38 +48,27 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     }
   };
 
-  // Instant Screen Capture & Analyze Screen handler matching Cheating Daddy
+  // Instant Screen Capture & Analyze — fully automatic, no dialog
   const handleAnalyzeScreen = async () => {
     try {
-      const mediaStream = await navigator.mediaDevices.getDisplayMedia({
-        video: { displaySurface: 'monitor' },
-        audio: false,
+      // Call backend to capture the screen (minimizes AVAI window, screenshots, restores)
+      const res = await fetch('http://127.0.0.1:8000/api/window/screenshot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
       });
+      const data = await res.json();
 
-      const videoTrack = mediaStream.getVideoTracks()[0];
-      const video = document.createElement('video');
-      video.srcObject = mediaStream;
-      await video.play();
-
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth || 1920;
-      canvas.height = video.videoHeight || 1080;
-
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const base64Img = canvas.toDataURL('image/jpeg', 0.9);
-        videoTrack.stop();
-
+      if (data.status === 'ok' && data.image) {
         const promptText =
           text.trim() ||
-          'Analyze this screen capture carefully. Identify and solve the coding problem, math question, or interview query shown on the screen step-by-step with clean code and high-impact explanations.';
-        onSendMessage(promptText, base64Img);
+          'Analyze this screen capture carefully. Identify and solve the coding problem, math question, or study query shown on the screen step-by-step with clean code and high-impact explanations.';
+        onSendMessage(promptText, data.image);
         setText('');
+      } else {
+        console.warn('Screenshot failed:', data.message);
       }
     } catch (err) {
-      console.warn('Screen capture cancelled or fallback to camera:', err);
-      onOpenCamera();
+      console.warn('Screen capture error:', err);
     }
   };
 

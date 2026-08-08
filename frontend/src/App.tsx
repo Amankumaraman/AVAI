@@ -111,23 +111,6 @@ export function App() {
     }
   }, [settings.backgroundTransparency, settings.responseFontSize, settings.backendUrl]);
 
-  // Fix WebView2 white screen after minimize/restore
-  // When the page becomes visible again, nudge the DOM to force Chromium's compositor to repaint
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        // Force a compositor repaint by toggling a CSS transform
-        const root = document.documentElement;
-        root.style.transform = 'translateZ(0)';
-        requestAnimationFrame(() => {
-          root.style.transform = '';
-        });
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, []);
-
   // 3. Web Speech Recognition STT Hook
   const handleTranscriptFinalized = useCallback(
     (finalText: string) => {

@@ -82,31 +82,6 @@ async def hide_native_window():
         return {"status": "error", "message": str(e)}
 
 
-def _force_redraw(hwnd_int):
-    """Force the window AND all child windows (WebView2) to repaint.
-
-    WebView2 suspends its renderer when minimized. On restore, it sometimes
-    fails to repaint, leaving a white screen. RedrawWindow with
-    RDW_ALLCHILDREN forces every nested child control to invalidate and
-    repaint immediately.
-    """
-    import ctypes
-    import time
-    user32 = ctypes.windll.user32
-
-    # RedrawWindow flags
-    RDW_INVALIDATE = 0x0001
-    RDW_UPDATENOW = 0x0100
-    RDW_ALLCHILDREN = 0x0080
-
-    # Small delay lets the window manager finish restoring the frame
-    time.sleep(0.05)
-
-    # Force full repaint of the window + all child controls (WebView2)
-    user32.RedrawWindow(hwnd_int, None, None,
-                        RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN)
-
-
 @router.post("/show")
 async def show_native_window():
     """Restore the native OS window using ShowWindow(SW_RESTORE)."""
@@ -122,7 +97,6 @@ async def show_native_window():
             # SW_RESTORE = 9
             user32.ShowWindow(hwnd_int, 9)
             user32.SetForegroundWindow(hwnd_int)
-            _force_redraw(hwnd_int)
             return {"status": "ok", "action": "restored"}
         return {"status": "error", "message": "AVAI window not found"}
     except Exception as e:
@@ -146,7 +120,6 @@ async def toggle_native_window():
                 # SW_RESTORE = 9
                 user32.ShowWindow(hwnd_int, 9)
                 user32.SetForegroundWindow(hwnd_int)
-                _force_redraw(hwnd_int)
                 return {"status": "ok", "action": "restored"}
             else:
                 # SW_MINIMIZE = 6
@@ -163,49 +136,13 @@ class OpacityRequest(BaseModel):
 
 @router.post("/opacity")
 async def set_native_window_opacity(req: OpacityRequest):
-    """Set native OS window transparency using Win32 SetLayeredWindowAttributes.
-
-    opacity: 0 = fully transparent, 100 = fully opaque
+    """Update window opacity setting.
+    
+    Transparency is handled natively by PyWebView (transparent=True)
+    and CSS rgba background values without Win32 GDI SetLayeredWindowAttributes
+    which corrupts WebView2 DirectComposition swapchains.
     """
-    if platform.system() != "Windows":
-        return {"status": "error", "message": "Only supported on Windows"}
-
-    try:
-        import ctypes
-        import ctypes.wintypes
-
-        user32 = ctypes.windll.user32
-        hwnd = find_avai_window_hwnd()
-        if hwnd:
-            hwnd_int = int(hwnd)
-
-            # Win32 constants
-            GWL_EXSTYLE = -20
-            WS_EX_LAYERED = 0x00080000
-            LWA_ALPHA = 0x00000002
-            SWP_NOMOVE = 0x0002
-            SWP_NOSIZE = 0x0001
-            SWP_NOZORDER = 0x0004
-            SWP_FRAMECHANGED = 0x0020
-
-            # Step 1: Enable WS_EX_LAYERED extended style on the window
-            current_style = user32.GetWindowLongW(hwnd_int, GWL_EXSTYLE)
-            if not (current_style & WS_EX_LAYERED):
-                user32.SetWindowLongW(hwnd_int, GWL_EXSTYLE, current_style | WS_EX_LAYERED)
-                user32.SetWindowPos(
-                    hwnd_int, 0, 0, 0, 0, 0,
-                    SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED
-                )
-
-            # Step 2: Set alpha value (0-255)
-            # Map 0-100 percentage to 0-255 byte
-            alpha_byte = max(10, min(255, int(req.opacity * 255 / 100)))
-            user32.SetLayeredWindowAttributes(hwnd_int, 0, alpha_byte, LWA_ALPHA)
-
-            return {"status": "ok", "opacity": req.opacity, "alpha_byte": alpha_byte}
-        return {"status": "error", "message": "AVAI window not found"}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
+    return {"status": "ok", "opacity": req.opacity}
 
 
 @router.get("/status")
@@ -213,3 +150,58 @@ async def window_status():
     """Returns current window visibility state."""
     return {"hidden": _last_position.get("hidden", False)}
 
+
+@router.post("/screenshot")
+async def capture_screenshot():
+    """Capture the current screen automatically.
+
+    1. Minimizes the AVAI window so it doesn't appear in the screenshot.
+    2. Captures the entire primary monitor using mss.
+    3. Restores the AVAI window cleanly.
+    4. Returns the screenshot as a base64 JPEG data URL.
+    """
+    try:
+        import ctypes
+        import time
+        import base64
+        import mss
+        import mss.tools
+
+        user32 = ctypes.windll.user32
+        hwnd = find_avai_window_hwnd()
+        was_visible = False
+
+        # Step 1: Minimize our window so it doesn't show in the screenshot
+        if hwnd:
+            hwnd_int = int(hwnd)
+            if not user32.IsIconic(hwnd_int):
+                was_visible = True
+                user32.ShowWindow(hwnd_int, 6)  # SW_MINIMIZE
+                time.sleep(0.2)  # Wait for minimize animation
+
+        # Step 2: Capture the primary monitor
+        with mss.mss() as sct:
+            monitor = sct.monitors[1]
+            screenshot = sct.grab(monitor)
+            png_bytes = mss.tools.to_png(screenshot.rgb, screenshot.size)
+            b64_data = base64.b64encode(png_bytes).decode("utf-8")
+            data_url = f"data:image/png;base64,{b64_data}"
+
+        # Step 3: Restore our window cleanly
+        if was_visible and hwnd:
+            hwnd_int = int(hwnd)
+            user32.ShowWindow(hwnd_int, 9)  # SW_RESTORE
+            user32.SetForegroundWindow(hwnd_int)
+
+        return {"status": "ok", "image": data_url}
+
+    except Exception as e:
+        # Attempt to restore window even on error
+        try:
+            if hwnd:
+                hwnd_int = int(hwnd)
+                user32.ShowWindow(hwnd_int, 9)
+                user32.SetForegroundWindow(hwnd_int)
+        except Exception:
+            pass
+        return {"status": "error", "message": str(e)}
