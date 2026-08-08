@@ -82,6 +82,31 @@ async def hide_native_window():
         return {"status": "error", "message": str(e)}
 
 
+def _force_redraw(hwnd_int):
+    """Force the window AND all child windows (WebView2) to repaint.
+
+    WebView2 suspends its renderer when minimized. On restore, it sometimes
+    fails to repaint, leaving a white screen. RedrawWindow with
+    RDW_ALLCHILDREN forces every nested child control to invalidate and
+    repaint immediately.
+    """
+    import ctypes
+    import time
+    user32 = ctypes.windll.user32
+
+    # RedrawWindow flags
+    RDW_INVALIDATE = 0x0001
+    RDW_UPDATENOW = 0x0100
+    RDW_ALLCHILDREN = 0x0080
+
+    # Small delay lets the window manager finish restoring the frame
+    time.sleep(0.05)
+
+    # Force full repaint of the window + all child controls (WebView2)
+    user32.RedrawWindow(hwnd_int, None, None,
+                        RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN)
+
+
 @router.post("/show")
 async def show_native_window():
     """Restore the native OS window using ShowWindow(SW_RESTORE)."""
@@ -93,9 +118,11 @@ async def show_native_window():
         user32 = ctypes.windll.user32
         hwnd = find_avai_window_hwnd()
         if hwnd:
+            hwnd_int = int(hwnd)
             # SW_RESTORE = 9
-            user32.ShowWindow(int(hwnd), 9)
-            user32.SetForegroundWindow(int(hwnd))
+            user32.ShowWindow(hwnd_int, 9)
+            user32.SetForegroundWindow(hwnd_int)
+            _force_redraw(hwnd_int)
             return {"status": "ok", "action": "restored"}
         return {"status": "error", "message": "AVAI window not found"}
     except Exception as e:
@@ -119,6 +146,7 @@ async def toggle_native_window():
                 # SW_RESTORE = 9
                 user32.ShowWindow(hwnd_int, 9)
                 user32.SetForegroundWindow(hwnd_int)
+                _force_redraw(hwnd_int)
                 return {"status": "ok", "action": "restored"}
             else:
                 # SW_MINIMIZE = 6
