@@ -86,8 +86,8 @@ def main():
         window = webview.create_window(
             title="AVAI - Stealth Interview Assistant",
             url="http://127.0.0.1:8000",
-            width=520,
-            height=780,
+            width=850,
+            height=850,
             on_top=True,
             resizable=True,
             background_color='#090d16',
