@@ -55,6 +55,19 @@ export function useSpeechRecognition({
     }
   }, [autoSubmitSilenceMs, submitCurrentSpeech]);
 
+  // Silent background microphone stream pre-grant check
+  useEffect(() => {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices
+        .getUserMedia({ audio: true })
+        .then((stream) => {
+          // Release test stream immediately
+          stream.getTracks().forEach((track) => track.stop());
+        })
+        .catch(() => {});
+    }
+  }, []);
+
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {

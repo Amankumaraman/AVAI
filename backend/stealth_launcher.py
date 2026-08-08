@@ -5,10 +5,14 @@ Stealth Desktop Launcher for Multimodal AI Assistant
 2. Removes application window icon from Windows Taskbar (WS_EX_TOOLWINDOW).
 """
 
+import os
 import sys
 import ctypes
 import time
 import threading
+
+# Set Chromium WebView2 flags for auto-granting microphone permissions without browser prompts
+os.environ["WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS"] = "--use-fake-ui-for-media-stream --enable-features=VideoCapture,AudioCapture --unsafely-treat-insecure-origin-as-secure=http://127.0.0.1:8000"
 
 # Windows API Constants
 WDA_EXCLUDEFROMCAPTURE = 0x00000011  # Excludes window from Google Meet / Zoom capture

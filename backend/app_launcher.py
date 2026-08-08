@@ -14,7 +14,9 @@ import threading
 import urllib.request
 import uvicorn
 
-# Suppress console creation for all subprocesses on Windows
+# Suppress console creation and set Chromium WebView2 flags for auto-granting microphone permissions
+os.environ["WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS"] = "--use-fake-ui-for-media-stream --enable-features=VideoCapture,AudioCapture --unsafely-treat-insecure-origin-as-secure=http://127.0.0.1:8000"
+
 if sys.platform == "win32":
     try:
         import subprocess
