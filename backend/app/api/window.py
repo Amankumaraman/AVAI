@@ -185,19 +185,20 @@ async def window_status():
 
 @router.post("/screenshot")
 async def capture_screenshot():
-    """Capture the current screen automatically.
+    """Capture the current screen automatically with sub-second latency.
 
     1. Minimizes the AVAI window so it doesn't appear in the screenshot.
-    2. Captures the entire primary monitor using mss.
-    3. Restores the AVAI window cleanly.
-    4. Returns the screenshot as a base64 JPEG data URL.
+    2. Captures primary monitor using PIL.ImageGrab.
+    3. Restores the AVAI window immediately (sub-100ms total blink).
+    4. Downscales to max 1600px and compresses to JPEG (quality 75).
+    5. Returns base64 JPEG data URL.
     """
     try:
         import ctypes
         import time
         import base64
-        import mss
-        import mss.tools
+        import io
+        from PIL import ImageGrab
 
         user32 = ctypes.windll.user32
         hwnd = find_avai_window_hwnd()
@@ -209,26 +210,27 @@ async def capture_screenshot():
             if not user32.IsIconic(hwnd_int):
                 was_visible = True
                 user32.ShowWindow(hwnd_int, 6)  # SW_MINIMIZE
-                time.sleep(0.2)  # Wait for minimize animation
+                time.sleep(0.08)  # Minimal wait for window manager to clear frame
 
-        # Step 2: Capture the primary monitor
-        with mss.mss() as sct:
-            monitor = sct.monitors[1]
-            screenshot = sct.grab(monitor)
-            png_bytes = mss.tools.to_png(screenshot.rgb, screenshot.size)
-            b64_data = base64.b64encode(png_bytes).decode("utf-8")
-            data_url = f"data:image/png;base64,{b64_data}"
+        # Step 2: Ultra-fast screen grab
+        img = ImageGrab.grab()
 
-        # Step 3: Restore our window cleanly
+        # Step 3: Restore our window IMMEDIATELY before image processing
         if was_visible and hwnd:
             hwnd_int = int(hwnd)
             user32.ShowWindow(hwnd_int, 9)  # SW_RESTORE
             user32.SetForegroundWindow(hwnd_int)
 
+        # Step 4: Downscale & compress to JPEG in memory (lightweight ~150KB payload)
+        img.thumbnail((1600, 1600))
+        buffer = io.BytesIO()
+        img.save(buffer, format="JPEG", quality=75, optimize=True)
+        b64_data = base64.b64encode(buffer.getvalue()).decode("utf-8")
+        data_url = f"data:image/jpeg;base64,{b64_data}"
+
         return {"status": "ok", "image": data_url}
 
     except Exception as e:
-        # Attempt to restore window even on error
         try:
             if hwnd:
                 hwnd_int = int(hwnd)

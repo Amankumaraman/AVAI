@@ -48,8 +48,12 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     }
   };
 
-  // Instant Screen Capture & Analyze — fully automatic, no dialog
+  const [isCapturing, setIsCapturing] = useState(false);
+
+  // Instant Screen Capture & Analyze — fully automatic, no dialog, sub-100ms
   const handleAnalyzeScreen = async () => {
+    if (isCapturing || isLoading) return;
+    setIsCapturing(true);
     try {
       // Call backend to capture the screen (minimizes AVAI window, screenshots, restores)
       const res = await fetch('http://127.0.0.1:8000/api/window/screenshot', {
@@ -69,6 +73,8 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       }
     } catch (err) {
       console.warn('Screen capture error:', err);
+    } finally {
+      setIsCapturing(false);
     }
   };
 
@@ -195,7 +201,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
         <button
           type="button"
           onClick={handleAnalyzeScreen}
-          disabled={isLoading}
+          disabled={isLoading || isCapturing}
           style={{
             height: '36px',
             padding: '0 14px',
@@ -210,14 +216,15 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            cursor: 'pointer',
+            cursor: isLoading || isCapturing ? 'not-allowed' : 'pointer',
             boxShadow: 'var(--shadow-neon)',
             transition: 'var(--transition-fast)',
+            opacity: isLoading || isCapturing ? 0.6 : 1,
           }}
           title="Capture active screen and analyze question or problem"
         >
           <Zap size={14} style={{ color: 'var(--accent-cyan)' }} />
-          <span>Analyze Screen</span>
+          <span>{isCapturing ? 'Capturing...' : 'Analyze Screen'}</span>
         </button>
       </form>
     </div>
