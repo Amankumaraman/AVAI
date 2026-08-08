@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from app.api import chat, vision, voice, models, window
+from app.api import chat, vision, voice, models, window, payment
 from app.config import HOST, PORT
 
 app = FastAPI(
@@ -28,6 +28,7 @@ app.include_router(vision.router)
 app.include_router(voice.router)
 app.include_router(models.router)
 app.include_router(window.router)
+app.include_router(payment.router)
 
 
 @app.get("/health", tags=["Health"])

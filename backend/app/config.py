@@ -32,3 +32,13 @@ HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", 8000))
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
+
+def get_razorpay_key_id() -> str:
+    """Get Razorpay Key ID from .env."""
+    load_dotenv(dotenv_path=env_path, override=True)
+    return os.getenv("RAZORPAY_KEY_ID", "rzp_test_TNA6Lv7QbmAMn8").strip()
+
+def get_razorpay_key_secret() -> str:
+    """Get Razorpay Key Secret from .env."""
+    load_dotenv(dotenv_path=env_path, override=True)
+    return os.getenv("RAZORPAY_KEY_SECRET", "Aucrh0nc30Uzr3oC06oxi4PL").strip()

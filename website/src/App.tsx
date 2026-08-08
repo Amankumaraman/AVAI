@@ -16,6 +16,12 @@ import {
   Key,
 } from 'lucide-react';
 
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
 const GithubIcon = ({ size = 20, style }: { size?: number; style?: React.CSSProperties }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" style={style}>
     <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
@@ -24,9 +30,106 @@ const GithubIcon = ({ size = 20, style }: { size?: number; style?: React.CSSProp
 
 export default function App() {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState<{ orderId: string; paymentId: string } | null>(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   const toggleFaq = (index: number) => {
     setActiveFaq(activeFaq === index ? null : index);
+  };
+
+  const handleBuyLifetimePass = async () => {
+    setIsProcessingPayment(true);
+    setPaymentError(null);
+
+    try {
+      // Step 1: Backend - Create Order (POST /api/create-order)
+      const backendUrl = 'http://localhost:8000';
+      const orderRes = await fetch(`${backendUrl}/api/create-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: 50000, // ₹500 INR = 50000 paise
+          currency: 'INR',
+          receipt: `rcpt_avai_${Date.now()}`,
+        }),
+      });
+
+      if (!orderRes.ok) {
+        const errData = await orderRes.json().catch(() => ({ detail: orderRes.statusText }));
+        throw new Error(errData.detail || 'Failed to create payment order.');
+      }
+
+      const orderData = await orderRes.json();
+      const razorpayKeyId =
+        import.meta.env.VITE_RAZORPAY_KEY_ID || orderData.key_id || 'rzp_test_TNA6Lv7QbmAMn8';
+
+      if (!window.Razorpay) {
+        throw new Error('Razorpay SDK failed to load. Please check your internet connection.');
+      }
+
+      // Step 2: Frontend - Open Razorpay Standard Checkout Modal
+      const options = {
+        key: razorpayKeyId,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: 'AVAI Assistant',
+        description: 'AVAI Windows Lifetime Pass (₹500 INR)',
+        order_id: orderData.order_id,
+        handler: async function (response: any) {
+          try {
+            // Step 3: Backend - Verify Payment Signature (POST /api/verify-payment)
+            const verifyRes = await fetch(`${backendUrl}/api/verify-payment`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+
+            const verifyData = await verifyRes.json();
+            setIsProcessingPayment(false);
+
+            if (verifyRes.ok && verifyData.status === 'success') {
+              setPaymentSuccess({
+                orderId: response.razorpay_order_id,
+                paymentId: response.razorpay_payment_id,
+              });
+            } else {
+              setPaymentError(verifyData.detail || 'Payment verification failed: Signature mismatch.');
+            }
+          } catch (err: any) {
+            setIsProcessingPayment(false);
+            setPaymentError(err.message || 'Payment verification failed.');
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            setIsProcessingPayment(false);
+          },
+        },
+        prefill: {
+          name: 'AVAI User',
+          email: 'user@example.com',
+          contact: '9999999999',
+        },
+        theme: {
+          color: '#6366f1',
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (response: any) {
+        setIsProcessingPayment(false);
+        setPaymentError(response.error?.description || 'Payment transaction failed.');
+      });
+      rzp.open();
+    } catch (err: any) {
+      setIsProcessingPayment(false);
+      setPaymentError(err.message || 'Could not connect to backend server on port 8000.');
+    }
   };
 
   return (
@@ -120,13 +223,15 @@ export default function App() {
             >
               <GithubIcon size={16} /> GitHub Repo
             </a>
-            <a
-              href="#pricing"
+            <button
+              type="button"
+              onClick={handleBuyLifetimePass}
+              disabled={isProcessingPayment}
               className="btn-primary"
-              style={{ padding: '8px 18px', fontSize: '0.85rem' }}
+              style={{ padding: '8px 18px', fontSize: '0.85rem', cursor: 'pointer' }}
             >
-              Buy Lifetime — ₹500
-            </a>
+              {isProcessingPayment ? 'Processing...' : 'Buy Lifetime — ₹500'}
+            </button>
           </div>
         </div>
       </header>
@@ -188,9 +293,15 @@ export default function App() {
 
         {/* Hero CTA Buttons */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
-          <a href="#pricing" className="btn-primary" style={{ padding: '14px 32px', fontSize: '1rem' }}>
-            Get Lifetime Access — ₹500 INR <ArrowRight size={18} />
-          </a>
+          <button
+            type="button"
+            onClick={handleBuyLifetimePass}
+            disabled={isProcessingPayment}
+            className="btn-primary"
+            style={{ padding: '14px 32px', fontSize: '1rem', cursor: 'pointer' }}
+          >
+            {isProcessingPayment ? 'Opening Checkout...' : 'Get Lifetime Access — ₹500 INR'} <ArrowRight size={18} />
+          </button>
           <a
             href="https://github.com/Amankumaraman/AVAI"
             target="_blank"
@@ -510,10 +621,10 @@ export default function App() {
             </div>
 
             {/* Buy Action Button */}
-            <a
-              href="https://github.com/Amankumaraman/AVAI"
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={handleBuyLifetimePass}
+              disabled={isProcessingPayment}
               className="btn-primary"
               style={{
                 width: '100%',
@@ -521,10 +632,12 @@ export default function App() {
                 padding: '16px',
                 fontSize: '1.05rem',
                 borderRadius: '12px',
+                cursor: 'pointer',
+                opacity: isProcessingPayment ? 0.7 : 1,
               }}
             >
-              Get AVAI Lifetime Pass — ₹500 INR <ArrowRight size={18} />
-            </a>
+              {isProcessingPayment ? 'Opening Checkout...' : 'Get AVAI Lifetime Pass — ₹500 INR'} <ArrowRight size={18} />
+            </button>
 
             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '14px' }}>
               🔒 Instant Access via GitHub Repository • 100% Safe & Tested
@@ -674,6 +787,44 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Payment Success Modal */}
+      {paymentSuccess && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+          <div className="glass-panel" style={{ maxWidth: '480px', width: '100%', padding: '32px', textAlign: 'center', border: '2px solid var(--emerald)', background: '#0d1424' }}>
+            <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.2)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--emerald)', marginBottom: '16px' }}>
+              <CheckCircle2 size={36} />
+            </div>
+            <h3 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#fff', marginBottom: '8px' }}>
+              Payment Successful! 🎉
+            </h3>
+            <p style={{ fontSize: '0.95rem', color: 'var(--text-muted)', marginBottom: '20px' }}>
+              Thank you for purchasing the AVAI Lifetime Pass! Your payment has been verified successfully.
+            </p>
+            <div style={{ background: 'rgba(0,0,0,0.4)', padding: '14px', borderRadius: '8px', textAlign: 'left', fontSize: '0.8rem', fontFamily: 'var(--font-mono)', color: 'var(--cyan)', marginBottom: '24px' }}>
+              <div><strong>Payment ID:</strong> {paymentSuccess.paymentId}</div>
+              <div><strong>Order ID:</strong> {paymentSuccess.orderId}</div>
+              <div><strong>Status:</strong> Signature Verified ✅</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPaymentSuccess(null)}
+              className="btn-primary"
+              style={{ width: '100%', justifyContent: 'center', cursor: 'pointer' }}
+            >
+              Continue to GitHub Repo ↗
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Error Toast */}
+      {paymentError && (
+        <div style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 1000, background: '#1e1115', border: '1px solid #ef4444', borderRadius: '12px', padding: '16px 20px', maxWidth: '400px', boxShadow: '0 10px 30px rgba(239, 68, 68, 0.3)', color: '#f87171', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+          <span style={{ fontSize: '0.88rem' }}>⚠️ {paymentError}</span>
+          <button onClick={() => setPaymentError(null)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontWeight: 700 }}>✕</button>
+        </div>
+      )}
     </div>
   );
 }
