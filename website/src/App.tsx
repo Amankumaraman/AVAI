@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-  Bot,
   Shield,
   Zap,
   EyeOff,
@@ -14,6 +13,8 @@ import {
   Code2,
   Calendar,
   Key,
+  Menu,
+  X,
 } from 'lucide-react';
 
 declare global {
@@ -34,6 +35,7 @@ export default function App() {
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [inputPaymentId, setInputPaymentId] = useState('');
   const [verifyError, setVerifyError] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const toggleFaq = (index: number) => {
     setActiveFaq(activeFaq === index ? null : index);
@@ -120,13 +122,10 @@ export default function App() {
             </div>
           </div>
 
-          {/* Nav Links */}
-          <nav style={{ display: 'flex', alignItems: 'center', gap: '28px' }}>
+          {/* Nav Links Desktop */}
+          <nav className="nav-links-desktop" style={{ display: 'flex', alignItems: 'center', gap: '28px' }}>
             <a href="#features" style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 500 }}>
               Features
-            </a>
-            <a href="#stealth" style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-              Stealth Mode
             </a>
             <a href="#compatibility" style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 500 }}>
               Compatibility
@@ -139,28 +138,55 @@ export default function App() {
             </a>
           </nav>
 
-          {/* Header Action CTAs */}
+          {/* Header Action CTAs Desktop */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <a
               href="https://github.com/Amankumaraman/AVAI"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-secondary"
+              className="btn-secondary nav-links-desktop"
               style={{ padding: '8px 16px', fontSize: '0.85rem' }}
             >
-              <GithubIcon size={16} /> GitHub Repo
+              <GithubIcon size={16} /> GitHub
             </a>
             <a
               href="https://rzp.io/rzp/CD0RQ3p"
               target="_blank"
               rel="noopener noreferrer"
               className="btn-primary"
-              style={{ padding: '8px 18px', fontSize: '0.85rem' }}
+              style={{ padding: '8px 14px', fontSize: '0.82rem' }}
             >
-              Buy Lifetime — ₹500 ↗
+              Pay ₹500 ↗
             </a>
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+            >
+              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile Dropdown Menu Overlay */}
+        {mobileMenuOpen && (
+          <div
+            style={{
+              padding: '20px',
+              borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px',
+              background: '#070a12',
+            }}
+          >
+            <a href="#features" onClick={() => setMobileMenuOpen(false)} style={{ color: '#fff', fontWeight: 600 }}>Features</a>
+            <a href="#compatibility" onClick={() => setMobileMenuOpen(false)} style={{ color: '#fff', fontWeight: 600 }}>Compatibility</a>
+            <a href="#pricing" onClick={() => setMobileMenuOpen(false)} style={{ color: 'var(--cyan)', fontWeight: 700 }}>Pricing (₹500 Lifetime)</a>
+            <a href="#faq" onClick={() => setMobileMenuOpen(false)} style={{ color: '#fff', fontWeight: 600 }}>FAQ</a>
+            <a href="https://github.com/Amankumaraman/AVAI" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-muted)' }}>GitHub Repository ↗</a>
+          </div>
+        )}
       </header>
 
       {/* 2. Hero Section */}
@@ -219,7 +245,7 @@ export default function App() {
         </p>
 
         {/* Hero CTA Buttons */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
+        <div className="hero-ctas" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
           <a
             href="https://rzp.io/rzp/CD0RQ3p"
             target="_blank"
@@ -272,7 +298,7 @@ export default function App() {
                   <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#ffbd2e' }} />
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '6px' }}>
-                  <Bot size={16} style={{ color: 'var(--cyan)' }} />
+                  <img src="/logo.png" alt="AVAI Logo" style={{ width: '18px', height: '18px', borderRadius: '4px' }} />
                   <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#fff' }}>AVAI — Floating Assistant</span>
                 </div>
               </div>
@@ -487,7 +513,7 @@ export default function App() {
 
           {/* Pricing Card */}
           <div
-            className="glass-panel"
+            className="glass-panel pricing-card"
             style={{
               maxWidth: '520px',
               margin: '0 auto',
@@ -740,9 +766,7 @@ export default function App() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: 'linear-gradient(135deg, var(--primary), var(--cyan))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-              <Bot size={16} />
-            </div>
+            <img src="/logo.png" alt="AVAI Logo" style={{ width: '28px', height: '28px', borderRadius: '6px' }} />
             <span style={{ fontSize: '1rem', fontWeight: 800, color: '#fff' }}>AVAI — Stealth Study Assistant</span>
           </div>
 
@@ -763,8 +787,8 @@ export default function App() {
 
       {/* Payment Verification Input Modal */}
       {showVerifyModal && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-          <div className="glass-panel" style={{ maxWidth: '460px', width: '100%', padding: '32px', textAlign: 'left', border: '1px solid var(--border-glow)', background: '#0d1424' }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div className="glass-panel glass-modal" style={{ maxWidth: '460px', width: '100%', padding: '32px', textAlign: 'left', border: '1px solid var(--border-glow)', background: '#0d1424' }}>
             <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff', marginBottom: '8px' }}>
               Verify Razorpay Payment
             </h3>

@@ -137,3 +137,31 @@ a {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
 }
+
+/* Responsive Media Queries */
+@media (max-width: 768px) {
+  .nav-links-desktop {
+    display: none !important;
+  }
+
+  .hero-ctas {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+
+  .hero-ctas a, .hero-ctas button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .pricing-card {
+    padding: 24px 16px !important;
+  }
+
+  .glass-modal {
+    width: 95vw !important;
+    padding: 20px !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+  }
+}
