@@ -654,8 +654,8 @@ export default function App() {
                   Your ₹500 lifetime license is active. Download your Windows software package below.
                 </p>
                 <a
-                  href="/downloads/AVAI-Setup-Windows.zip"
-                  download="AVAI-Setup-Windows.zip"
+                  href={import.meta.env.VITE_SUPABASE_DOWNLOAD_URL || "/downloads/AVAI-Setup-Windows.zip"}
+                  download="AVAI_Setup_v1.0.exe"
                   className="btn-primary"
                   style={{
                     width: '100%',
@@ -667,7 +667,7 @@ export default function App() {
                     boxShadow: '0 4px 20px rgba(16, 185, 129, 0.4)',
                   }}
                 >
-                  📥 Download Software Now (AVAI-Setup-Windows.zip) <ArrowRight size={18} />
+                  📥 Download Software Now (AVAI_Setup_v1.0.exe) <ArrowRight size={18} />
                 </a>
               </div>
             ) : (
@@ -874,8 +874,8 @@ export default function App() {
 
             {/* Direct Download Button */}
             <a
-              href="/downloads/AVAI-Setup-Windows.zip"
-              download="AVAI-Setup-Windows.zip"
+              href={import.meta.env.VITE_SUPABASE_DOWNLOAD_URL || "/downloads/AVAI-Setup-Windows.zip"}
+              download="AVAI_Setup_v1.0.exe"
               className="btn-primary"
               style={{
                 width: '100%',
@@ -888,7 +888,7 @@ export default function App() {
                 marginBottom: '20px',
               }}
             >
-              📥 Download AVAI Windows Software Now (.zip) <ArrowRight size={18} />
+              📥 Download AVAI Windows Software Now (.exe) <ArrowRight size={18} />
             </a>
 
             {/* Quick Setup Instructions */}
