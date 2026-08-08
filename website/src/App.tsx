@@ -180,22 +180,19 @@ export default function App() {
           }}
         >
           {/* Brand Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <img
+              src="/logo.png"
+              alt="AVAI AI Logo"
               style={{
-                width: '34px',
-                height: '34px',
-                borderRadius: '8px',
-                background: 'linear-gradient(135deg, var(--primary), var(--cyan))',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#fff',
-                boxShadow: '0 0 15px var(--primary-glow)',
+                width: '38px',
+                height: '38px',
+                borderRadius: '10px',
+                objectFit: 'cover',
+                boxShadow: '0 0 20px rgba(6, 182, 212, 0.6)',
+                border: '1px solid rgba(6, 182, 212, 0.5)',
               }}
-            >
-              <Bot size={20} />
-            </div>
+            />
             <div>
               <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff', letterSpacing: '-0.5px' }}>
                 AVAI
