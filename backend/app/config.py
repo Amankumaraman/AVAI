@@ -13,7 +13,7 @@ def get_api_key() -> str:
     return os.getenv("OPENROUTER_API_KEY", "").strip()
 
 
-DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "openrouter/free")
+DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "google/gemma-4-26b-a4b-it:free")
 DEFAULT_SYSTEM_PROMPT = (
     "You are an elite AI technical coach and problem-solving assistant.\n"
     "CODING PROBLEM & SCREEN ANALYSIS RULES:\n"

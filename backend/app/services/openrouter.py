@@ -71,9 +71,32 @@ class OpenRouterService:
 
                 data = response.json()
                 choice = data["choices"][0]
+                content_text = choice["message"]["content"]
+
+                # Fallback check: If the returned model output is just "User Safety: safe" or a safety filter classification, retry with a fallback model
+                if "User Safety:" in content_text or content_text.strip() == "safe" or (len(content_text.strip()) < 30 and "User Safety" in content_text):
+                    fallback_models = ["google/gemma-4-31b-it:free", "google/gemma-4-26b-a4b-it:free", "cohere/north-mini-code:free", "openai/gpt-oss-20b:free"]
+                    for fb_model in fallback_models:
+                        if fb_model != target_model:
+                            payload["model"] = fb_model
+                            try:
+                                fb_res = await client.post(f"{self.base_url}/chat/completions", headers=headers, json=payload)
+                                if fb_res.status_code == 200:
+                                    fb_data = fb_res.json()
+                                    fb_content = fb_data["choices"][0]["message"]["content"]
+                                    if "User Safety:" not in fb_content and len(fb_content.strip()) > 15:
+                                        return {
+                                            "role": "assistant",
+                                            "content": fb_content,
+                                            "model": fb_data.get("model", fb_model),
+                                            "finish_reason": "stop",
+                                        }
+                            except Exception:
+                                pass
+
                 return {
                     "role": choice["message"]["role"],
-                    "content": choice["message"]["content"],
+                    "content": content_text,
                     "model": data.get("model", target_model),
                     "finish_reason": choice.get("finish_reason", "stop"),
                 }

@@ -6,7 +6,7 @@ const DEFAULT_BACKEND_URL = 'http://localhost:8000';
 export const DEFAULT_SETTINGS: Settings = {
   openRouterApiKey: '',
   backendUrl: DEFAULT_BACKEND_URL,
-  defaultModel: 'openrouter/free',
+  defaultModel: 'google/gemma-4-26b-a4b-it:free',
   systemPrompt:
     'You are an elite AI technical coach and problem-solving assistant. CODING PROBLEM & SCREEN ANALYSIS RULES: 1) Whenever a screen capture, LeetCode problem, or coding task is provided, IMMEDIATELY output the COMPLETE, OPTIMAL, PRODUCTION-READY SOLUTION CODE in standard markdown code blocks (e.g. ```python, ```cpp, ```java, ```javascript). 2) Always include Big-O Time Complexity and Space Complexity analysis. 3) Provide a brief 2-3 sentence overview of the algorithmic approach and key edge cases handled.',
   autoSpeakResponse: false,
