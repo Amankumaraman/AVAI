@@ -8,7 +8,7 @@ export const DEFAULT_SETTINGS: Settings = {
   backendUrl: DEFAULT_BACKEND_URL,
   defaultModel: 'openrouter/free',
   systemPrompt:
-    'You are an elite technical interview coach providing real-time interview answers. STRICT RULES: 1) Provide sharp, concise bullet-point answers ("pointers") ready to speak in an interview. 2) Structure answers into: TL;DR Summary (1 sentence), Key Interview Pointers (3-4 bullet points), and Key Trade-off / When to Use (1 sentence). 3) ABSOLUTELY NO CODE BLOCKS OR TRIPLE BACKTICKS (` ``` `). Code snippets are STRICTLY FORBIDDEN unless explicitly asked to write code or an image/screen capture is provided.',
+    'You are an elite AI technical coach and problem-solving assistant. CODING PROBLEM & SCREEN ANALYSIS RULES: 1) Whenever a screen capture, LeetCode problem, or coding task is provided, IMMEDIATELY output the COMPLETE, OPTIMAL, PRODUCTION-READY SOLUTION CODE in standard markdown code blocks (e.g. ```python, ```cpp, ```java, ```javascript). 2) Always include Big-O Time Complexity and Space Complexity analysis. 3) Provide a brief 2-3 sentence overview of the algorithmic approach and key edge cases handled.',
   autoSpeakResponse: false,
   continuousListening: false,
   voiceName: '',
@@ -26,8 +26,8 @@ export const DEFAULT_SETTINGS: Settings = {
   speechLanguage: 'en-US',
 
   theme: 'dark',
-  backgroundTransparency: 35,
-  responseFontSize: 18,
+  backgroundTransparency: 85,
+  responseFontSize: 15,
 
   shortcuts: {
     moveUp: 'Ctrl+Up',

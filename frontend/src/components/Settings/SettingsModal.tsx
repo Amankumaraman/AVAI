@@ -31,8 +31,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [imageQuality, setImageQuality] = useState(settings.imageQuality || 'medium');
   const [speechLanguage, setSpeechLanguage] = useState(settings.speechLanguage || 'en-US');
   const [theme, setTheme] = useState(settings.theme || 'dark');
-  const [backgroundTransparency, setBackgroundTransparency] = useState(settings.backgroundTransparency ?? 83);
-  const [responseFontSize, setResponseFontSize] = useState(settings.responseFontSize ?? 18);
+  const [backgroundTransparency, setBackgroundTransparency] = useState(settings.backgroundTransparency ?? 85);
+  const [responseFontSize, setResponseFontSize] = useState(settings.responseFontSize ?? 15);
   const [shortcuts, setShortcuts] = useState<KeyboardShortcuts>(settings.shortcuts || {
     moveUp: 'Ctrl+Up',
     moveDown: 'Ctrl+Down',
