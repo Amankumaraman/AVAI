@@ -65,7 +65,9 @@ async def move_native_window(req: MoveWindowRequest):
 
 @router.post("/hide")
 async def hide_native_window():
-    """Minimize the native OS window using ShowWindow(SW_MINIMIZE)."""
+    """Completely hide the native OS window using ShowWindow(SW_HIDE).
+    Leaves zero popups, zero snippets, and zero taskbar traces.
+    """
     if platform.system() != "Windows":
         return {"status": "error", "message": "Only supported on Windows"}
 
@@ -74,9 +76,11 @@ async def hide_native_window():
         user32 = ctypes.windll.user32
         hwnd = find_avai_window_hwnd()
         if hwnd:
-            # SW_MINIMIZE = 6
-            user32.ShowWindow(int(hwnd), 6)
-            return {"status": "ok", "action": "minimized"}
+            hwnd_int = int(hwnd)
+            # SW_HIDE = 0
+            user32.ShowWindow(hwnd_int, 0)
+            _last_position["hidden"] = True
+            return {"status": "ok", "action": "hidden"}
         return {"status": "error", "message": "AVAI window not found"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
@@ -84,7 +88,7 @@ async def hide_native_window():
 
 @router.post("/show")
 async def show_native_window():
-    """Restore the native OS window using ShowWindow(SW_RESTORE)."""
+    """Show the hidden native OS window using ShowWindow(SW_SHOW)."""
     if platform.system() != "Windows":
         return {"status": "error", "message": "Only supported on Windows"}
 
@@ -94,10 +98,11 @@ async def show_native_window():
         hwnd = find_avai_window_hwnd()
         if hwnd:
             hwnd_int = int(hwnd)
-            # SW_RESTORE = 9
-            user32.ShowWindow(hwnd_int, 9)
+            # SW_SHOW = 5
+            user32.ShowWindow(hwnd_int, 5)
             user32.SetForegroundWindow(hwnd_int)
-            return {"status": "ok", "action": "restored"}
+            _last_position["hidden"] = False
+            return {"status": "ok", "action": "shown"}
         return {"status": "error", "message": "AVAI window not found"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
@@ -105,7 +110,7 @@ async def show_native_window():
 
 @router.post("/toggle")
 async def toggle_native_window():
-    """Toggle native OS window visibility: Minimize if restored, restore if minimized."""
+    """Toggle native OS window visibility: Hide if visible, show if hidden."""
     if platform.system() != "Windows":
         return {"status": "error", "message": "Only supported on Windows"}
 
@@ -115,16 +120,11 @@ async def toggle_native_window():
         hwnd = find_avai_window_hwnd()
         if hwnd:
             hwnd_int = int(hwnd)
-            # Check if minimized
-            if user32.IsIconic(hwnd_int):
-                # SW_RESTORE = 9
-                user32.ShowWindow(hwnd_int, 9)
-                user32.SetForegroundWindow(hwnd_int)
-                return {"status": "ok", "action": "restored"}
+            # If window is visible, hide it. Otherwise show it.
+            if user32.IsWindowVisible(hwnd_int):
+                return await hide_native_window()
             else:
-                # SW_MINIMIZE = 6
-                user32.ShowWindow(hwnd_int, 6)
-                return {"status": "ok", "action": "minimized"}
+                return await show_native_window()
         return {"status": "error", "message": "AVAI window not found"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
@@ -187,9 +187,9 @@ async def window_status():
 async def capture_screenshot():
     """Capture the current screen automatically with sub-second latency.
 
-    1. Minimizes the AVAI window so it doesn't appear in the screenshot.
+    1. Hides the AVAI window completely using SW_HIDE (no popups).
     2. Captures primary monitor using PIL.ImageGrab.
-    3. Restores the AVAI window immediately (sub-100ms total blink).
+    3. Restores the AVAI window immediately using SW_SHOW.
     4. Downscales to max 1600px and compresses to JPEG (quality 75).
     5. Returns base64 JPEG data URL.
     """
@@ -204,21 +204,21 @@ async def capture_screenshot():
         hwnd = find_avai_window_hwnd()
         was_visible = False
 
-        # Step 1: Minimize our window so it doesn't show in the screenshot
+        # Step 1: Hide our window completely so it doesn't show in screenshot or pop up
         if hwnd:
             hwnd_int = int(hwnd)
-            if not user32.IsIconic(hwnd_int):
+            if user32.IsWindowVisible(hwnd_int):
                 was_visible = True
-                user32.ShowWindow(hwnd_int, 6)  # SW_MINIMIZE
-                time.sleep(0.08)  # Minimal wait for window manager to clear frame
+                user32.ShowWindow(hwnd_int, 0)  # SW_HIDE
+                time.sleep(0.04)  # Minimal wait for window manager
 
         # Step 2: Ultra-fast screen grab
         img = ImageGrab.grab()
 
-        # Step 3: Restore our window IMMEDIATELY before image processing
+        # Step 3: Restore our window IMMEDIATELY
         if was_visible and hwnd:
             hwnd_int = int(hwnd)
-            user32.ShowWindow(hwnd_int, 9)  # SW_RESTORE
+            user32.ShowWindow(hwnd_int, 5)  # SW_SHOW
             user32.SetForegroundWindow(hwnd_int)
 
         # Step 4: Downscale & compress to JPEG in memory (lightweight ~150KB payload)
@@ -234,7 +234,7 @@ async def capture_screenshot():
         try:
             if hwnd:
                 hwnd_int = int(hwnd)
-                user32.ShowWindow(hwnd_int, 9)
+                user32.ShowWindow(hwnd_int, 5)
                 user32.SetForegroundWindow(hwnd_int)
         except Exception:
             pass
