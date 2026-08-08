@@ -184,6 +184,7 @@ def main():
             on_top=True,
             resizable=True,
             easy_drag=True,
+            frameless=True,
             background_color='#090d16',
         )
 

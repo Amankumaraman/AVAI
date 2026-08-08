@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bot, Settings as SettingsIcon, EyeOff, Trash2, Code, MessageSquare } from 'lucide-react';
+import { Bot, Settings as SettingsIcon, EyeOff, Trash2, Code, MessageSquare, Minus } from 'lucide-react';
 import { ModelSelector } from './ModelSelector';
 import type { ModelInfo, Message, ProfileType, AnswerMode, TechRole } from '../../types';
 
@@ -203,6 +203,18 @@ export const Navbar: React.FC<NavbarProps> = ({
           style={{ width: '28px', height: '28px' }}
         >
           <SettingsIcon size={14} />
+        </button>
+
+        {/* Floating Window Minimize Control */}
+        <button
+          onClick={() => {
+            fetch('http://127.0.0.1:8000/api/window/hide', { method: 'POST' }).catch(() => {});
+          }}
+          className="icon-btn"
+          title="Minimize Floating Window (Ctrl+\)"
+          style={{ width: '28px', height: '28px', color: 'var(--text-muted)' }}
+        >
+          <Minus size={14} />
         </button>
       </div>
     </header>
