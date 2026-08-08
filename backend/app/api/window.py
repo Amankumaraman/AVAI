@@ -136,13 +136,45 @@ class OpacityRequest(BaseModel):
 
 @router.post("/opacity")
 async def set_native_window_opacity(req: OpacityRequest):
-    """Update window opacity setting.
-    
-    Transparency is handled natively by PyWebView (transparent=True)
-    and CSS rgba background values without Win32 GDI SetLayeredWindowAttributes
-    which corrupts WebView2 DirectComposition swapchains.
+    """Set native OS window transparency using Win32 SetLayeredWindowAttributes.
+
+    opacity: 0 = fully transparent, 100 = fully opaque
     """
-    return {"status": "ok", "opacity": req.opacity}
+    if platform.system() != "Windows":
+        return {"status": "error", "message": "Only supported on Windows"}
+
+    try:
+        import ctypes
+        user32 = ctypes.windll.user32
+        hwnd = find_avai_window_hwnd()
+        if hwnd:
+            hwnd_int = int(hwnd)
+
+            GWL_EXSTYLE = -20
+            WS_EX_LAYERED = 0x00080000
+            LWA_ALPHA = 0x00000002
+            SWP_NOMOVE = 0x0002
+            SWP_NOSIZE = 0x0001
+            SWP_NOZORDER = 0x0004
+            SWP_FRAMECHANGED = 0x0020
+
+            # Step 1: Enable WS_EX_LAYERED extended style on the window
+            current_style = user32.GetWindowLongW(hwnd_int, GWL_EXSTYLE)
+            if not (current_style & WS_EX_LAYERED):
+                user32.SetWindowLongW(hwnd_int, GWL_EXSTYLE, current_style | WS_EX_LAYERED)
+                user32.SetWindowPos(
+                    hwnd_int, 0, 0, 0, 0, 0,
+                    SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED
+                )
+
+            # Step 2: Set alpha value (0-255)
+            alpha_byte = max(15, min(255, int(req.opacity * 255 / 100)))
+            user32.SetLayeredWindowAttributes(hwnd_int, 0, alpha_byte, LWA_ALPHA)
+
+            return {"status": "ok", "opacity": req.opacity, "alpha_byte": alpha_byte}
+        return {"status": "error", "message": "AVAI window not found"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 
 @router.get("/status")

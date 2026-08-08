@@ -184,7 +184,7 @@ def main():
             on_top=True,
             resizable=True,
             easy_drag=True,
-            transparent=True,
+            background_color='#090d16',
         )
 
         def apply_stealth_loop():
