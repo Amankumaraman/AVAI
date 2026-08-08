@@ -1,46 +1,51 @@
-# AVAI - Multimodal AI Student Study Companion
+# 🤖 AVAI — Stealth AI Assistant for Windows
 
-AVAI is a high-performance student study assistant and focus companion. Designed for classrooms, study halls, and libraries, it helps students capture slide contents, solve complex homework equations, summarize programming examples, and retrieve study guidance in real-time.
-
-Built using **FastAPI**, **Vite/React**, and **PyWebView**, it runs on Windows as a native desktop utility featuring customized transparency, presenter-friendly overlay exclusions, and system hotkeys.
+AVAI is a high-performance, stealth AI study & focus assistant built for Windows. Designed for technical interviews, LeetCode problem solving, and exams, it features sub-100ms screen analysis, borderless floating widget, and **100% screen-share invisibility** (Google Meet, Zoom, Microsoft Teams).
 
 ---
 
-## ✨ Features
+## 🌐 Live Product Website & Deployment
 
-- **📺 Presenter-Friendly Overlay Exclusions**: Automatically excludes the helper interface from screen-sharing captures (`WDA_EXCLUDEFROMCAPTURE`) so it won't distract others during live presentation slides on Zoom or Google Meet.
-- **🔇 Silent Library Mode**: Speech synthesis is hard-muted across all modules, ensuring quiet and distraction-free operation in libraries, classrooms, and study spaces.
-- **🎛️ Keyboard & Window Control**:
-  - `Ctrl + ArrowKeys` - Smoothly reposition the floating utility window across your desktop/monitors.
-  - `Ctrl + \` or `Alt + H` - Minimize the companion app instantly (press again system-wide to restore it).
-  - `Ctrl + [` / `Ctrl + ]` - Navigate backward and forward through prior notes pages.
-- **📸 Slide & Text Capture**: Capture slide segments or equations on-demand only (via **⚡ Analyze Screen** or `Ctrl + Enter`) to query explanations.
-- **🎚️ Customized Transparency**: Adjust the window background opacity of the UI and host frame using a settings slider (persisted to local settings) to blend with your lecture notes.
-- **💡 Study Modes & Presets**: Toggle between **Verbal Pointers** (crisp, easy-to-read concepts) and **Deep Code** (comprehensive logic breakdowns) modes.
+- 🌐 **Live Website (Vercel)**: [https://avai-gilt.vercel.app/](https://avai-gilt.vercel.app/)
+- 📦 **Direct Executable Installer (Supabase Cloud)**: [Download AVAI_Setup_v1.0.exe](https://logqkleznefvwxngpbcs.supabase.co/storage/v1/object/public/app-downloads/AVAI_Setup_v1.0.exe)
+- 💳 **Razorpay Payment Gateway Integration**: ₹500 INR Lifetime Access Pass (No monthly subscription)
+- 🐙 **GitHub Repository**: [https://github.com/Amankumaraman/AVAI](https://github.com/Amankumaraman/AVAI)
 
 ---
 
-## 🛠️ Tech Stack
+## ✨ Key Features
 
-- **Frontend**: Vite, React, TypeScript, CSS Variables
-- **Backend**: FastAPI, Uvicorn, Python `ctypes` (Win32 APIs)
-- **Runtime**: PyWebView (wrapper around Microsoft Edge WebView2 runtime)
-- **AI Models**: OpenRouter API (Gemma 3, Llama 3.3, Qwen 2.5 Coder, Gemini 2.0, DeepSeek R1)
+- 🥷 **100% Screen Share Invisibility**: Uses native Win32 `WDA_EXCLUDEFROMCAPTURE` display affinity so the floating widget is completely hidden from Google Meet, Zoom, Teams, and Discord screen shares.
+- ⚡ **Sub-100ms Screen Analysis**: Captures LeetCode, HackerRank, or exam screens instantly and outputs optimal solution code with Big-O Time & Space Complexity analysis.
+- ⚡ **Groq LPU Acceleration**: Sub-200ms model responses using Meta `llama-3.3-70b-versatile` & Google `gemma-4-26b`.
+- ⌨️ **Global OS Hotkeys**: Toggle window stealth visibility from anywhere on Windows using `Ctrl + \` or `Alt + H`.
+- 📅 **Date-Wise Saved Responses**: Local chat & solution history automatically organized date-wise in Settings with timestamps.
+- 🎙️ **Auto Microphone Access**: Pre-granted Chromium WebView2 media stream permissions (`--use-fake-ui-for-media-stream`) with zero browser prompts.
 
 ---
 
-## 🚀 Setup & Run
+## 🛠️ Tech Stack & Architecture
 
-### Prerequisites
-- Windows OS (for Win32 window APIs and global hotkeys)
-- Python 3.10+
-- Node.js 18+
+- **Frontend**: React 18, Vite, TypeScript, Lucide Icons, Glassmorphism CSS
+- **Website & Vercel API**: React Landing Page + Vercel Serverless Functions (`/api/create-order.ts`, `/api/verify-payment.ts`)
+- **Backend Engine**: FastAPI, Uvicorn, Python `ctypes` (Win32 APIs), MSS Screen Capture, Razorpay SDK
+- **Runtime**: Native Edge WebView2 Runtime (`stealth_launcher.py` with `WS_EX_TOOLWINDOW`)
+- **Cloud Storage**: Supabase Storage for hosting release installer setup (`AVAI_Setup_v1.0.exe`)
 
-### Setup & Run
-1. Run `Install_Desktop_Shortcut.bat` to create an **AVAI Assistant** shortcut on your Desktop.
-2. Double-click `Start_AVAI.bat` (or use the shortcut) to run the detached silent FastAPI backend and native desktop client.
+---
+
+## 🚀 Build & Install Instructions
+
+### 1. Run App Locally
+Double-click `Start_AVAI.bat` (or `Install_Desktop_Shortcut.bat`) to launch the stealth backend and desktop widget.
+
+### 2. Build Windows Setup Executable (.exe)
+Double-click `build_installer.bat` to run the automated build pipeline:
+1. Builds React production static bundle (`frontend/dist`)
+2. Packages Python backend via PyInstaller (`backend/AVAI_Backend.spec`)
+3. Compiles Inno Setup installer (`AVAI_Installer.iss` -> `installer_dist/AVAI_Setup_v1.0.exe`)
 
 ---
 
 ## 📄 License
-This project is licensed under the MIT License.
+Licensed under the MIT License.
