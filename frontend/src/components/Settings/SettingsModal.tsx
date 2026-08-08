@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Settings as SettingsIcon, Calendar, Trash2, Clock } from 'lucide-react';
-import type { Settings, KeyboardShortcuts, Message } from '../../types';
+import { X, Settings as SettingsIcon, Calendar, Trash2, Clock, Cpu } from 'lucide-react';
+import type { Settings, KeyboardShortcuts, Message, ModelInfo, AnswerMode, TechRole } from '../../types';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -12,6 +12,9 @@ interface SettingsModalProps {
   voices?: SpeechSynthesisVoice[];
   messages?: Message[];
   onClearHistory?: () => void;
+  models?: ModelInfo[];
+  selectedModel?: string;
+  onSelectModel?: (id: string) => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -23,6 +26,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onDeleteAllData,
   messages,
   onClearHistory,
+  models = [],
+  selectedModel = 'openrouter/free',
+  onSelectModel,
 }) => {
   const [apiKey, setApiKey] = useState(settings.openRouterApiKey);
   const [backendUrl, setBackendUrl] = useState(settings.backendUrl);
@@ -30,6 +36,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [autoSpeak, setAutoSpeak] = useState(settings.autoSpeakResponse);
   const [voiceName, setVoiceName] = useState(settings.voiceName);
   const [speechRate, setSpeechRate] = useState(settings.speechRate);
+  const [answerMode, setAnswerMode] = useState<AnswerMode>(settings.answerMode || 'verbal');
+  const [techRole, setTechRole] = useState<TechRole>(settings.techRole || 'backend');
 
   const [audioMode, setAudioMode] = useState(settings.audioMode || 'speaker_only');
   const [imageQuality, setImageQuality] = useState(settings.imageQuality || 'medium');
@@ -62,8 +70,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     setImageQuality(settings.imageQuality || 'medium');
     setSpeechLanguage(settings.speechLanguage || 'en-US');
     setTheme(settings.theme || 'dark');
-    setBackgroundTransparency(settings.backgroundTransparency ?? 83);
-    setResponseFontSize(settings.responseFontSize ?? 18);
+    setBackgroundTransparency(settings.backgroundTransparency ?? 85);
+    setResponseFontSize(settings.responseFontSize ?? 15);
+    setAnswerMode(settings.answerMode || 'verbal');
+    setTechRole(settings.techRole || 'backend');
     if (settings.shortcuts) setShortcuts(settings.shortcuts);
   }, [settings, isOpen]);
 
@@ -105,6 +115,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       backgroundTransparency,
       responseFontSize,
       shortcuts,
+      answerMode,
+      techRole,
     });
     onClose();
   };
@@ -162,6 +174,116 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* Section 0: AI Intelligence & Mode Controls */}
+          <div
+            style={{
+              background: 'rgba(99, 102, 241, 0.05)',
+              border: '1px solid rgba(99, 102, 241, 0.2)',
+              borderRadius: '12px',
+              padding: '16px 20px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+              <Cpu size={18} style={{ color: 'var(--primary)' }} />
+              <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#fff' }}>
+                AI Model & Mode Preferences
+              </h3>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {/* Model Selection */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>AI Model</span>
+                <select
+                  value={selectedModel}
+                  onChange={(e) => {
+                    if (onSelectModel) onSelectModel(e.target.value);
+                  }}
+                  style={{
+                    padding: '8px 14px',
+                    borderRadius: '8px',
+                    background: '#161d2f',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: '#fff',
+                    fontSize: '0.85rem',
+                    minWidth: '220px',
+                  }}
+                >
+                  {models.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name} {m.is_free ? '(Free)' : ''}
+                    </option>
+                  ))}
+                  {models.length === 0 && (
+                    <option value="openrouter/free">OpenRouter Auto (Free)</option>
+                  )}
+                </select>
+              </div>
+
+              {/* Answer Mode (Verbal vs Deep Code) */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Answer Mode</span>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setAnswerMode('verbal')}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: '6px',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      border: answerMode === 'verbal' ? '1px solid var(--primary)' : '1px solid rgba(255, 255, 255, 0.1)',
+                      background: answerMode === 'verbal' ? 'rgba(99, 102, 241, 0.25)' : '#161d2f',
+                      color: answerMode === 'verbal' ? '#fff' : 'var(--text-muted)',
+                    }}
+                  >
+                    🗣️ Verbal Pointers
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAnswerMode('code')}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: '6px',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      border: answerMode === 'code' ? '1px solid var(--accent-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                      background: answerMode === 'code' ? 'rgba(6, 182, 212, 0.25)' : '#161d2f',
+                      color: answerMode === 'code' ? '#fff' : 'var(--text-muted)',
+                    }}
+                  >
+                    💻 Deep Code Solution
+                  </button>
+                </div>
+              </div>
+
+              {/* Tech Role */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Target Domain</span>
+                <select
+                  value={techRole}
+                  onChange={(e: any) => setTechRole(e.target.value)}
+                  style={{
+                    padding: '8px 14px',
+                    borderRadius: '8px',
+                    background: '#161d2f',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: '#fff',
+                    fontSize: '0.85rem',
+                    minWidth: '220px',
+                  }}
+                >
+                  <option value="backend">🐍 Python / Backend Systems</option>
+                  <option value="frontend">⚛️ React / Frontend Web</option>
+                  <option value="data">📊 Data Science & ML</option>
+                  <option value="devops">☁️ DevOps & Cloud Infra</option>
+                  <option value="general">🧠 General CS & Algorithms</option>
+                </select>
+              </div>
+            </div>
+          </div>
           {/* Section 1: Audio Input */}
           <div
             style={{

@@ -10,7 +10,6 @@ import { useSpeechSynthesis } from './hooks/useSpeechSynthesis';
 import { useSpeechRecognition } from './hooks/useSpeechRecognition';
 import { useChat } from './hooks/useChat';
 import { useShortcuts } from './hooks/useShortcuts';
-import type { ProfileType, AnswerMode, TechRole } from './types';
 import './App.css';
 
 export function App() {
@@ -189,24 +188,8 @@ export function App() {
         transition: 'opacity 0.2s ease',
       }}
     >
-      {/* Cheating Daddy Style Navbar Header with Native Window Dragging */}
-      <Navbar
-        models={models}
-        selectedModel={selectedModel}
-        onSelectModel={setSelectedModel}
-        selectedProfile={settings.selectedProfile || 'interview'}
-        onSelectProfile={(profile: ProfileType) => updateSettings({ selectedProfile: profile })}
-        answerMode={settings.answerMode || 'verbal'}
-        onToggleAnswerMode={(mode: AnswerMode) => updateSettings({ answerMode: mode })}
-        techRole={settings.techRole || 'backend'}
-        onSelectTechRole={(role: TechRole) => updateSettings({ techRole: role })}
-        onOpenSettings={() => setIsSettingsOpen(true)}
-        onOpenPrompts={() => setIsPromptsOpen(true)}
-        onClearHistory={clearHistory}
-        messages={messages}
-        isStealthMode={!isVisible}
-        onToggleStealthMode={toggleVisibility}
-      />
+      {/* Ultra-Clean Header Navbar with Red Exit & Yellow Settings Dots */}
+      <Navbar onOpenSettings={() => setIsSettingsOpen(true)} />
 
       {/* Main Workspace Workspace */}
       <main className="main-workspace">
@@ -260,6 +243,9 @@ export function App() {
         voices={voices}
         messages={messages}
         onClearHistory={clearHistory}
+        models={models}
+        selectedModel={selectedModel}
+        onSelectModel={setSelectedModel}
       />
 
       <CameraModal
