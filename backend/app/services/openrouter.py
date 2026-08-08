@@ -39,11 +39,12 @@ class OpenRouterService:
             formatted_messages.append({"role": "system", "content": sys_prompt})
         formatted_messages.extend(messages)
 
-        # ⚡ Groq LPU API Acceleration (sub-300ms inference)
+        # ⚡ Groq LPU API Acceleration (sub-200ms inference for text/code)
         groq_key = (user_api_key and user_api_key.startswith("gsk_") and user_api_key) or get_groq_api_key()
-        if groq_key and groq_key.startswith("gsk_"):
-            has_image = any(isinstance(m.get("content"), list) for m in messages)
-            groq_model = "llama-3.2-11b-vision-preview" if has_image else "llama-3.3-70b-versatile"
+        has_image = any(isinstance(m.get("content"), list) for m in messages)
+        
+        if groq_key and groq_key.startswith("gsk_") and not has_image:
+            groq_model = "llama-3.3-70b-versatile"
             groq_headers = {
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {groq_key}",
