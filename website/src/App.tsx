@@ -644,27 +644,73 @@ export default function App() {
               ))}
             </div>
 
-            {/* Buy Action Button */}
-            <button
-              type="button"
-              onClick={handleBuyLifetimePass}
-              disabled={isProcessingPayment}
-              className="btn-primary"
-              style={{
-                width: '100%',
-                justifyContent: 'center',
-                padding: '16px',
-                fontSize: '1.05rem',
-                borderRadius: '12px',
-                cursor: 'pointer',
-                opacity: isProcessingPayment ? 0.7 : 1,
-              }}
-            >
-              {isProcessingPayment ? 'Opening Checkout...' : 'Get AVAI Lifetime Pass — ₹500 INR'} <ArrowRight size={18} />
-            </button>
+            {/* Pre-payment vs Post-payment Download Action Button */}
+            {paymentSuccess ? (
+              <div style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid var(--emerald)', borderRadius: '14px', padding: '20px', textAlign: 'center' }}>
+                <div style={{ color: 'var(--emerald)', fontWeight: 800, fontSize: '1.1rem', marginBottom: '8px' }}>
+                  🎉 Payment Verified & Software Unlocked!
+                </div>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
+                  Your ₹500 lifetime license is active. Download your Windows software package below.
+                </p>
+                <a
+                  href="/downloads/AVAI-Setup-Windows.zip"
+                  download="AVAI-Setup-Windows.zip"
+                  className="btn-primary"
+                  style={{
+                    width: '100%',
+                    justifyContent: 'center',
+                    padding: '16px',
+                    fontSize: '1.05rem',
+                    borderRadius: '12px',
+                    background: 'linear-gradient(135deg, #10b981, #06b6d4)',
+                    boxShadow: '0 4px 20px rgba(16, 185, 129, 0.4)',
+                  }}
+                >
+                  📥 Download Software Now (AVAI-Setup-Windows.zip) <ArrowRight size={18} />
+                </a>
+              </div>
+            ) : (
+              <div>
+                <div
+                  style={{
+                    background: 'rgba(245, 158, 11, 0.1)',
+                    border: '1px solid rgba(245, 158, 11, 0.3)',
+                    borderRadius: '10px',
+                    padding: '10px 14px',
+                    fontSize: '0.82rem',
+                    color: 'var(--amber)',
+                    marginBottom: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  <span>🔒 Software download requires payment of ₹500 INR</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleBuyLifetimePass}
+                  disabled={isProcessingPayment}
+                  className="btn-primary"
+                  style={{
+                    width: '100%',
+                    justifyContent: 'center',
+                    padding: '16px',
+                    fontSize: '1.05rem',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    opacity: isProcessingPayment ? 0.7 : 1,
+                  }}
+                >
+                  {isProcessingPayment ? 'Opening Checkout...' : 'Pay ₹500 to Unlock & Download Software'} <ArrowRight size={18} />
+                </button>
+              </div>
+            )}
 
             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '14px' }}>
-              🔒 Instant Access via GitHub Repository • 100% Safe & Tested
+              🔒 Instant Access after payment • Compatible with Windows 10 & 11 (64-Bit)
             </p>
           </div>
         </div>
@@ -815,28 +861,56 @@ export default function App() {
       {/* Payment Success Modal */}
       {paymentSuccess && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-          <div className="glass-panel" style={{ maxWidth: '480px', width: '100%', padding: '32px', textAlign: 'center', border: '2px solid var(--emerald)', background: '#0d1424' }}>
+          <div className="glass-panel" style={{ maxWidth: '520px', width: '100%', padding: '32px', textAlign: 'center', border: '2px solid var(--emerald)', background: '#0d1424' }}>
             <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.2)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--emerald)', marginBottom: '16px' }}>
               <CheckCircle2 size={36} />
             </div>
             <h3 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#fff', marginBottom: '8px' }}>
-              Payment Successful! 🎉
+              Payment Verified! 🎉
             </h3>
             <p style={{ fontSize: '0.95rem', color: 'var(--text-muted)', marginBottom: '20px' }}>
-              Thank you for purchasing the AVAI Lifetime Pass! Your payment has been verified successfully.
+              Your ₹500 Lifetime Pass is active. Download your Windows software package below:
             </p>
-            <div style={{ background: 'rgba(0,0,0,0.4)', padding: '14px', borderRadius: '8px', textAlign: 'left', fontSize: '0.8rem', fontFamily: 'var(--font-mono)', color: 'var(--cyan)', marginBottom: '24px' }}>
+
+            {/* Direct Download Button */}
+            <a
+              href="/downloads/AVAI-Setup-Windows.zip"
+              download="AVAI-Setup-Windows.zip"
+              className="btn-primary"
+              style={{
+                width: '100%',
+                justifyContent: 'center',
+                padding: '16px',
+                fontSize: '1.1rem',
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, #10b981, #06b6d4)',
+                boxShadow: '0 4px 25px rgba(16, 185, 129, 0.4)',
+                marginBottom: '20px',
+              }}
+            >
+              📥 Download AVAI Windows Software Now (.zip) <ArrowRight size={18} />
+            </a>
+
+            {/* Quick Setup Instructions */}
+            <div style={{ background: 'rgba(0,0,0,0.4)', padding: '16px', borderRadius: '10px', textAlign: 'left', fontSize: '0.82rem', color: '#cbd5e1', marginBottom: '20px', lineHeight: 1.6 }}>
+              <div style={{ fontWeight: 700, color: 'var(--cyan)', marginBottom: '6px' }}>⚙️ Quick Windows Setup Instructions:</div>
+              <div>1. Download & extract <code>AVAI-Setup-Windows.zip</code></div>
+              <div>2. Double-click <code>Start_AVAI.bat</code> to launch</div>
+              <div>3. Press <code>Ctrl + \</code> or <code>Alt + H</code> to toggle stealth mode!</div>
+            </div>
+
+            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '6px', textAlign: 'left', fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginBottom: '20px' }}>
               <div><strong>Payment ID:</strong> {paymentSuccess.paymentId}</div>
               <div><strong>Order ID:</strong> {paymentSuccess.orderId}</div>
-              <div><strong>Status:</strong> Signature Verified ✅</div>
             </div>
+
             <button
               type="button"
               onClick={() => setPaymentSuccess(null)}
-              className="btn-primary"
+              className="btn-secondary"
               style={{ width: '100%', justifyContent: 'center', cursor: 'pointer' }}
             >
-              Continue to GitHub Repo ↗
+              Close Window
             </button>
           </div>
         </div>
