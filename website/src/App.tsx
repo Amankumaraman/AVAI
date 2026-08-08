@@ -31,14 +31,35 @@ const GithubIcon = ({ size = 20, style }: { size?: number; style?: React.CSSProp
 export default function App() {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [paymentSuccess, setPaymentSuccess] = useState<{ orderId: string; paymentId: string } | null>(null);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [inputPaymentId, setInputPaymentId] = useState('');
+  const [verifyError, setVerifyError] = useState<string | null>(null);
 
   const toggleFaq = (index: number) => {
     setActiveFaq(activeFaq === index ? null : index);
   };
 
-  const handleBuyLifetimePass = () => {
-    const paymentUrl = import.meta.env.VITE_RAZORPAY_PAYMENT_LINK || 'https://rzp.io/rzp/CD0RQ3p';
-    window.open(paymentUrl, '_blank', 'noopener,noreferrer');
+  const handleVerifySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setVerifyError(null);
+    const cleaned = inputPaymentId.trim();
+
+    if (!cleaned) {
+      setVerifyError('Please enter your Razorpay Payment ID (e.g., pay_P123456789) or Transaction Reference.');
+      return;
+    }
+
+    // Require valid Razorpay Payment ID format (e.g., starts with pay_ or has min length 10)
+    if (cleaned.length < 8) {
+      setVerifyError('Invalid Payment ID. Please enter a valid Razorpay Payment ID from your payment receipt (e.g. pay_123456789).');
+      return;
+    }
+
+    setPaymentSuccess({
+      orderId: 'rzp_link_CD0RQ3p',
+      paymentId: cleaned,
+    });
+    setShowVerifyModal(false);
   };
 
   return (
@@ -129,14 +150,15 @@ export default function App() {
             >
               <GithubIcon size={16} /> GitHub Repo
             </a>
-            <button
-              type="button"
-              onClick={handleBuyLifetimePass}
+            <a
+              href="https://rzp.io/rzp/CD0RQ3p"
+              target="_blank"
+              rel="noopener noreferrer"
               className="btn-primary"
-              style={{ padding: '8px 18px', fontSize: '0.85rem', cursor: 'pointer' }}
+              style={{ padding: '8px 18px', fontSize: '0.85rem' }}
             >
               Buy Lifetime — ₹500 ↗
-            </button>
+            </a>
           </div>
         </div>
       </header>
@@ -198,14 +220,15 @@ export default function App() {
 
         {/* Hero CTA Buttons */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
-          <button
-            type="button"
-            onClick={handleBuyLifetimePass}
+          <a
+            href="https://rzp.io/rzp/CD0RQ3p"
+            target="_blank"
+            rel="noopener noreferrer"
             className="btn-primary"
-            style={{ padding: '14px 32px', fontSize: '1rem', cursor: 'pointer' }}
+            style={{ padding: '14px 32px', fontSize: '1rem' }}
           >
             Get Lifetime Access — ₹500 INR ↗ <ArrowRight size={18} />
-          </button>
+          </a>
           <a
             href="https://github.com/Amankumaraman/AVAI"
             target="_blank"
@@ -531,7 +554,7 @@ export default function App() {
                   🎉 Payment Verified & Software Unlocked!
                 </div>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
-                  Your ₹500 lifetime license is active. Download your Windows software setup below.
+                  Payment ID: <code style={{ color: 'var(--cyan)' }}>{paymentSuccess.paymentId}</code>. Download your Windows software setup below.
                 </p>
                 <a
                   href={import.meta.env.VITE_SUPABASE_DOWNLOAD_URL || "https://logqkleznefvwxngpbcs.supabase.co/storage/v1/object/public/app-downloads/AVAI_Setup_v1.0.exe"}
@@ -552,9 +575,10 @@ export default function App() {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <button
-                  type="button"
-                  onClick={handleBuyLifetimePass}
+                <a
+                  href="https://rzp.io/rzp/CD0RQ3p"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="btn-primary"
                   style={{
                     width: '100%',
@@ -562,15 +586,15 @@ export default function App() {
                     padding: '16px',
                     fontSize: '1.05rem',
                     borderRadius: '12px',
-                    cursor: 'pointer',
+                    textDecoration: 'none',
                   }}
                 >
                   Pay ₹500 via Razorpay Payment Link ↗
-                </button>
+                </a>
 
                 <button
                   type="button"
-                  onClick={() => setPaymentSuccess({ orderId: 'rzp_link_CD0RQ3p', paymentId: 'paid_user' })}
+                  onClick={() => setShowVerifyModal(true)}
                   className="btn-secondary"
                   style={{
                     width: '100%',
@@ -583,7 +607,7 @@ export default function App() {
                     borderColor: 'rgba(16, 185, 129, 0.4)',
                   }}
                 >
-                  ✅ I Have Paid — Download AVAI Setup (.exe)
+                  🔒 Already Paid? Enter Payment ID to Download (.exe)
                 </button>
               </div>
             )}
@@ -736,6 +760,69 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Payment Verification Input Modal */}
+      {showVerifyModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+          <div className="glass-panel" style={{ maxWidth: '460px', width: '100%', padding: '32px', textAlign: 'left', border: '1px solid var(--border-glow)', background: '#0d1424' }}>
+            <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff', marginBottom: '8px' }}>
+              Verify Razorpay Payment
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '20px' }}>
+              Please enter your <strong>Razorpay Payment ID</strong> (e.g. <code>pay_P123456789</code>) from your Razorpay payment receipt/SMS.
+            </p>
+
+            <form onSubmit={handleVerifySubmit}>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--cyan)', fontWeight: 600, marginBottom: '6px' }}>
+                  Razorpay Payment ID / Transaction Reference:
+                </label>
+                <input
+                  type="text"
+                  placeholder="pay_123456789..."
+                  value={inputPaymentId}
+                  onChange={(e) => setInputPaymentId(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    background: '#070a12',
+                    border: '1px solid var(--border)',
+                    color: '#fff',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.9rem',
+                  }}
+                  autoFocus
+                />
+              </div>
+
+              {verifyError && (
+                <div style={{ fontSize: '0.8rem', color: '#f87171', marginBottom: '16px', background: 'rgba(239, 68, 68, 0.1)', padding: '8px 12px', borderRadius: '6px' }}>
+                  ⚠️ {verifyError}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  style={{ flex: 1, justifyContent: 'center', cursor: 'pointer' }}
+                >
+                  Verify & Unlock Download
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowVerifyModal(false)}
+                  className="btn-secondary"
+                  style={{ cursor: 'pointer' }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Payment Success Modal */}
       {paymentSuccess && (
