@@ -651,7 +651,7 @@ export default function App() {
                   Your ₹500 lifetime license is active. Download your Windows software package below.
                 </p>
                 <a
-                  href={import.meta.env.VITE_SUPABASE_DOWNLOAD_URL || "/downloads/AVAI-Setup-Windows.zip"}
+                  href={import.meta.env.VITE_SUPABASE_DOWNLOAD_URL || "https://logqkleznefvwxngpbcs.supabase.co/storage/v1/object/public/app-downloads/AVAI_Setup_v1.0.exe"}
                   download="AVAI_Setup_v1.0.exe"
                   className="btn-primary"
                   style={{
@@ -871,7 +871,7 @@ export default function App() {
 
             {/* Direct Download Button */}
             <a
-              href={import.meta.env.VITE_SUPABASE_DOWNLOAD_URL || "/downloads/AVAI-Setup-Windows.zip"}
+              href={import.meta.env.VITE_SUPABASE_DOWNLOAD_URL || "https://logqkleznefvwxngpbcs.supabase.co/storage/v1/object/public/app-downloads/AVAI_Setup_v1.0.exe"}
               download="AVAI_Setup_v1.0.exe"
               className="btn-primary"
               style={{
