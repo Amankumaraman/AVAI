@@ -31,6 +31,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onSelectModel,
 }) => {
   const [apiKey, setApiKey] = useState(settings.openRouterApiKey);
+  const [groqApiKey, setGroqApiKey] = useState(settings.groqApiKey || '');
   const [backendUrl, setBackendUrl] = useState(settings.backendUrl);
   const [systemPrompt, setSystemPrompt] = useState(settings.systemPrompt);
   const [autoSpeak, setAutoSpeak] = useState(settings.autoSpeakResponse);
@@ -61,6 +62,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   useEffect(() => {
     setApiKey(settings.openRouterApiKey);
+    setGroqApiKey(settings.groqApiKey || '');
     setBackendUrl(settings.backendUrl);
     setSystemPrompt(settings.systemPrompt);
     setAutoSpeak(settings.autoSpeakResponse);
@@ -103,6 +105,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     if (e) e.preventDefault();
     onSave({
       openRouterApiKey: apiKey,
+      groqApiKey,
       backendUrl,
       systemPrompt,
       autoSpeakResponse: autoSpeak,
@@ -582,6 +585,28 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   borderRadius: '8px',
                   background: '#161d2f',
                   border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: '#fff',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.85rem',
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ fontSize: '0.8rem', color: 'var(--accent-cyan)', display: 'block', marginBottom: '4px', fontWeight: 600 }}>
+                ⚡ Groq API Key (Optional for Sub-300ms LPU Acceleration)
+              </label>
+              <input
+                type="password"
+                value={groqApiKey}
+                onChange={(e) => setGroqApiKey(e.target.value)}
+                placeholder="gsk_..."
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  background: '#161d2f',
+                  border: '1px solid rgba(6, 182, 212, 0.3)',
                   color: '#fff',
                   fontFamily: 'var(--font-mono)',
                   fontSize: '0.85rem',

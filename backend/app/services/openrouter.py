@@ -2,7 +2,7 @@ import httpx
 import json
 from typing import List, Dict, Any, Optional, AsyncGenerator
 from fastapi import HTTPException
-from app.config import get_api_key, OPENROUTER_BASE_URL, DEFAULT_MODEL, DEFAULT_SYSTEM_PROMPT
+from app.config import get_api_key, get_groq_api_key, OPENROUTER_BASE_URL, GROQ_BASE_URL, DEFAULT_MODEL, DEFAULT_SYSTEM_PROMPT
 from app.models.schemas import ChatMessage
 
 
@@ -33,6 +33,42 @@ class OpenRouterService:
         system_prompt: Optional[str] = None,
         user_api_key: Optional[str] = None,
     ) -> Dict[str, Any]:
+        sys_prompt = system_prompt or DEFAULT_SYSTEM_PROMPT
+        formatted_messages = []
+        if sys_prompt:
+            formatted_messages.append({"role": "system", "content": sys_prompt})
+        formatted_messages.extend(messages)
+
+        # ⚡ Groq LPU API Acceleration (sub-300ms inference)
+        groq_key = (user_api_key and user_api_key.startswith("gsk_") and user_api_key) or get_groq_api_key()
+        if groq_key and groq_key.startswith("gsk_"):
+            has_image = any(isinstance(m.get("content"), list) for m in messages)
+            groq_model = "llama-3.2-11b-vision-preview" if has_image else "llama-3.3-70b-versatile"
+            groq_headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {groq_key}",
+                "User-Agent": "AVAI/1.0",
+            }
+            groq_payload = {
+                "model": groq_model,
+                "messages": formatted_messages,
+                "stream": False,
+            }
+            async with httpx.AsyncClient(timeout=8.0) as client:
+                try:
+                    res = await client.post(f"{GROQ_BASE_URL}/chat/completions", headers=groq_headers, json=groq_payload)
+                    if res.status_code == 200:
+                        data = res.json()
+                        choice = data["choices"][0]
+                        return {
+                            "role": choice["message"]["role"],
+                            "content": choice["message"]["content"],
+                            "model": f"groq/{groq_model}",
+                            "finish_reason": choice.get("finish_reason", "stop"),
+                        }
+                except Exception:
+                    pass  # Fallback to OpenRouter seamlessly
+
         target_model = model or "google/gemma-4-26b-a4b-it:free"
         headers = self._get_headers(user_api_key)
 

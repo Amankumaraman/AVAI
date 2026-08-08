@@ -5,6 +5,7 @@ const DEFAULT_BACKEND_URL = 'http://localhost:8000';
 
 export const DEFAULT_SETTINGS: Settings = {
   openRouterApiKey: '',
+  groqApiKey: '',
   backendUrl: DEFAULT_BACKEND_URL,
   defaultModel: 'google/gemma-4-26b-a4b-it:free',
   systemPrompt:
@@ -156,8 +157,10 @@ export function useChat(onSpeakResponse?: (text: string) => void) {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
-      if (settings.openRouterApiKey) {
-        headers['x-openrouter-api-key'] = settings.openRouterApiKey;
+      if (settings.groqApiKey && settings.groqApiKey.trim().startsWith('gsk_')) {
+        headers['x-openrouter-api-key'] = settings.groqApiKey.trim();
+      } else if (settings.openRouterApiKey) {
+        headers['x-openrouter-api-key'] = settings.openRouterApiKey.trim();
       }
 
       try {

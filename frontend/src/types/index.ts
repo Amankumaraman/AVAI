@@ -51,6 +51,7 @@ export interface KeyboardShortcuts {
 
 export interface Settings {
   openRouterApiKey: string;
+  groqApiKey?: string;
   backendUrl: string;
   defaultModel: string;
   systemPrompt: string;

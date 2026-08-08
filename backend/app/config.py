@@ -22,6 +22,13 @@ DEFAULT_SYSTEM_PROMPT = (
     "3. Provide a brief 2-3 sentence overview of the algorithmic approach and key edge cases handled."
 )
 
+def get_groq_api_key() -> str:
+    """Dynamically get Groq API key from .env."""
+    load_dotenv(dotenv_path=env_path, override=True)
+    return os.getenv("GROQ_API_KEY", "").strip()
+
+
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", 8000))
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+GROQ_BASE_URL = "https://api.groq.com/openai/v1"
