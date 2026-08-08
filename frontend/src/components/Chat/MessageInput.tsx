@@ -65,7 +65,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       if (data.status === 'ok' && data.image) {
         const promptText =
           text.trim() ||
-          'Analyze this screen capture carefully. Identify and solve the coding problem, math question, or study query shown on the screen step-by-step with clean code and high-impact explanations.';
+          'Identify and solve the coding problem, algorithm, or task shown on this screen capture. Provide the COMPLETE, OPTIMAL SOLUTION CODE in standard markdown code blocks (```python / ```cpp / ```java / ```js) with Big-O Time & Space Complexity analysis.';
         onSendMessage(promptText, data.image);
         setText('');
       } else {
