@@ -129,16 +129,17 @@ def start_global_hotkey_listener():
         # Hotkey constants
         MOD_ALT = 0x0001
         MOD_CONTROL = 0x0002
+        MOD_NOREPEAT = 0x4000
         VK_OEM_5 = 0xDC  # The backslash \ key
         VK_H = ord('H')
 
         HOTKEY_ID_CTRL_BACKSLASH = 9001
         HOTKEY_ID_ALT_H = 9002
 
-        # Register Ctrl + Backslash as a global hotkey
-        user32.RegisterHotKey(None, HOTKEY_ID_CTRL_BACKSLASH, MOD_CONTROL, VK_OEM_5)
-        # Register Alt + H as a backup global hotkey
-        user32.RegisterHotKey(None, HOTKEY_ID_ALT_H, MOD_ALT, VK_H)
+        # Register Ctrl + Backslash as a global hotkey with MOD_NOREPEAT
+        user32.RegisterHotKey(None, HOTKEY_ID_CTRL_BACKSLASH, MOD_CONTROL | MOD_NOREPEAT, VK_OEM_5)
+        # Register Alt + H as a backup global hotkey with MOD_NOREPEAT
+        user32.RegisterHotKey(None, HOTKEY_ID_ALT_H, MOD_ALT | MOD_NOREPEAT, VK_H)
 
         # GetMessage loop — blocks until a hotkey message arrives
         msg = ctypes.wintypes.MSG()
