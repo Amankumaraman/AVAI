@@ -30,130 +30,15 @@ const GithubIcon = ({ size = 20, style }: { size?: number; style?: React.CSSProp
 
 export default function App() {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState<{ orderId: string; paymentId: string } | null>(null);
-  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   const toggleFaq = (index: number) => {
     setActiveFaq(activeFaq === index ? null : index);
   };
 
-  const handleBuyLifetimePass = async () => {
-    setIsProcessingPayment(true);
-    setPaymentError(null);
-
-    try {
-      // Step 1: Vercel Serverless API Function - Create Order (/api/create-order)
-      let orderRes = await fetch('/api/create-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount: 50000, // ₹500 INR = 50000 paise
-          currency: 'INR',
-          receipt: `rcpt_avai_${Date.now()}`,
-        }),
-      }).catch(() => null);
-
-      if (!orderRes || !orderRes.ok) {
-        // Fallback to local Python backend port 8000
-        orderRes = await fetch('http://localhost:8000/api/create-order', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            amount: 50000,
-            currency: 'INR',
-            receipt: `rcpt_avai_${Date.now()}`,
-          }),
-        });
-      }
-
-      if (!orderRes.ok) {
-        const errData = await orderRes.json().catch(() => ({ detail: orderRes.statusText }));
-        throw new Error(errData.detail || errData.error || 'Failed to create payment order.');
-      }
-
-      const orderData = await orderRes.json();
-      const razorpayKeyId =
-        import.meta.env.VITE_RAZORPAY_KEY_ID || orderData.key_id || 'rzp_test_TNA6Lv7QbmAMn8';
-
-      if (!window.Razorpay) {
-        throw new Error('Razorpay SDK failed to load. Please check your internet connection.');
-      }
-
-      // Step 2: Frontend - Open Razorpay Standard Checkout Modal
-      const options = {
-        key: razorpayKeyId,
-        amount: orderData.amount,
-        currency: orderData.currency,
-        name: 'AVAI Assistant',
-        description: 'AVAI Windows Lifetime Pass (₹500 INR)',
-        order_id: orderData.order_id,
-        handler: async function (response: any) {
-          try {
-            // Step 3: Vercel Serverless API Function - Verify Payment Signature (/api/verify-payment)
-            let verifyRes = await fetch('/api/verify-payment', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-              }),
-            }).catch(() => null);
-
-            if (!verifyRes || !verifyRes.ok) {
-              verifyRes = await fetch('http://localhost:8000/api/verify-payment', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_signature: response.razorpay_signature,
-                }),
-              });
-            }
-
-            const verifyData = await verifyRes.json();
-            setIsProcessingPayment(false);
-
-            if (verifyRes.ok && verifyData.status === 'success') {
-              setPaymentSuccess({
-                orderId: response.razorpay_order_id,
-                paymentId: response.razorpay_payment_id,
-              });
-            } else {
-              setPaymentError(verifyData.detail || verifyData.error || 'Payment verification failed: Signature mismatch.');
-            }
-          } catch (err: any) {
-            setIsProcessingPayment(false);
-            setPaymentError(err.message || 'Payment verification failed.');
-          }
-        },
-        modal: {
-          ondismiss: function () {
-            setIsProcessingPayment(false);
-          },
-        },
-        prefill: {
-          name: 'AVAI User',
-          email: 'user@example.com',
-          contact: '9999999999',
-        },
-        theme: {
-          color: '#6366f1',
-        },
-      };
-
-      const rzp = new window.Razorpay(options);
-      rzp.on('payment.failed', function (response: any) {
-        setIsProcessingPayment(false);
-        setPaymentError(response.error?.description || 'Payment transaction failed.');
-      });
-      rzp.open();
-    } catch (err: any) {
-      setIsProcessingPayment(false);
-      setPaymentError(err.message || 'Could not connect to payment service.');
-    }
+  const handleBuyLifetimePass = () => {
+    const paymentUrl = import.meta.env.VITE_RAZORPAY_PAYMENT_LINK || 'https://rzp.io/rzp/CD0RQ3p';
+    window.open(paymentUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -247,11 +132,10 @@ export default function App() {
             <button
               type="button"
               onClick={handleBuyLifetimePass}
-              disabled={isProcessingPayment}
               className="btn-primary"
               style={{ padding: '8px 18px', fontSize: '0.85rem', cursor: 'pointer' }}
             >
-              {isProcessingPayment ? 'Processing...' : 'Buy Lifetime — ₹500'}
+              Buy Lifetime — ₹500 ↗
             </button>
           </div>
         </div>
@@ -317,11 +201,10 @@ export default function App() {
           <button
             type="button"
             onClick={handleBuyLifetimePass}
-            disabled={isProcessingPayment}
             className="btn-primary"
             style={{ padding: '14px 32px', fontSize: '1rem', cursor: 'pointer' }}
           >
-            {isProcessingPayment ? 'Opening Checkout...' : 'Get Lifetime Access — ₹500 INR'} <ArrowRight size={18} />
+            Get Lifetime Access — ₹500 INR ↗ <ArrowRight size={18} />
           </button>
           <a
             href="https://github.com/Amankumaraman/AVAI"
@@ -641,14 +524,14 @@ export default function App() {
               ))}
             </div>
 
-            {/* Pre-payment vs Post-payment Download Action Button */}
+            {/* Pre-payment vs Post-payment Action Buttons */}
             {paymentSuccess ? (
               <div style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid var(--emerald)', borderRadius: '14px', padding: '20px', textAlign: 'center' }}>
                 <div style={{ color: 'var(--emerald)', fontWeight: 800, fontSize: '1.1rem', marginBottom: '8px' }}>
                   🎉 Payment Verified & Software Unlocked!
                 </div>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
-                  Your ₹500 lifetime license is active. Download your Windows software package below.
+                  Your ₹500 lifetime license is active. Download your Windows software setup below.
                 </p>
                 <a
                   href={import.meta.env.VITE_SUPABASE_DOWNLOAD_URL || "https://logqkleznefvwxngpbcs.supabase.co/storage/v1/object/public/app-downloads/AVAI_Setup_v1.0.exe"}
@@ -668,28 +551,10 @@ export default function App() {
                 </a>
               </div>
             ) : (
-              <div>
-                <div
-                  style={{
-                    background: 'rgba(245, 158, 11, 0.1)',
-                    border: '1px solid rgba(245, 158, 11, 0.3)',
-                    borderRadius: '10px',
-                    padding: '10px 14px',
-                    fontSize: '0.82rem',
-                    color: 'var(--amber)',
-                    marginBottom: '16px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                  }}
-                >
-                  <span>🔒 Software download requires payment of ₹500 INR</span>
-                </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <button
                   type="button"
                   onClick={handleBuyLifetimePass}
-                  disabled={isProcessingPayment}
                   className="btn-primary"
                   style={{
                     width: '100%',
@@ -698,10 +563,27 @@ export default function App() {
                     fontSize: '1.05rem',
                     borderRadius: '12px',
                     cursor: 'pointer',
-                    opacity: isProcessingPayment ? 0.7 : 1,
                   }}
                 >
-                  {isProcessingPayment ? 'Opening Checkout...' : 'Pay ₹500 to Unlock & Download Software'} <ArrowRight size={18} />
+                  Pay ₹500 via Razorpay Payment Link ↗
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPaymentSuccess({ orderId: 'rzp_link_CD0RQ3p', paymentId: 'paid_user' })}
+                  className="btn-secondary"
+                  style={{
+                    width: '100%',
+                    justifyContent: 'center',
+                    padding: '12px',
+                    fontSize: '0.9rem',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    color: 'var(--emerald)',
+                    borderColor: 'rgba(16, 185, 129, 0.4)',
+                  }}
+                >
+                  ✅ I Have Paid — Download AVAI Setup (.exe)
                 </button>
               </div>
             )}
@@ -910,14 +792,6 @@ export default function App() {
               Close Window
             </button>
           </div>
-        </div>
-      )}
-
-      {/* Payment Error Toast */}
-      {paymentError && (
-        <div style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 1000, background: '#1e1115', border: '1px solid #ef4444', borderRadius: '12px', padding: '16px 20px', maxWidth: '400px', boxShadow: '0 10px 30px rgba(239, 68, 68, 0.3)', color: '#f87171', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-          <span style={{ fontSize: '0.88rem' }}>⚠️ {paymentError}</span>
-          <button onClick={() => setPaymentError(null)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontWeight: 700 }}>✕</button>
         </div>
       )}
     </div>
